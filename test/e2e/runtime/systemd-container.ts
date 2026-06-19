@@ -47,12 +47,19 @@ export class SystemdContainer {
     return this.container.getMappedPort(port);
   }
 
-  /** Download and unpack the AGH binary into /opt (no service install). */
+  /** Unpack the AGH binary into /opt: prefer the build baked into the image
+   *  (so tests exercise THIS checkout), fall back to a pinned download. */
   async installAghBinary(): Promise<void> {
     const r = await this.exec([
       'bash',
       '-c',
-      `curl -fsSL https://github.com/AdguardTeam/AdGuardHome/releases/download/${AGH_VERSION}/AdGuardHome_linux_amd64.tar.gz | tar -xz -C /opt`,
+      'set -e; ' +
+      'if [ -f /opt/agh-dist/AdGuardHome_linux_amd64.tar.gz ]; then ' +
+      '  tar -xz -f /opt/agh-dist/AdGuardHome_linux_amd64.tar.gz -C /opt; ' +
+      'else ' +
+      `  curl -fsSL --retry 3 --retry-connrefused --connect-timeout 10 --max-time 300 "https://github.com/AdguardTeam/AdGuardHome/releases/download/${AGH_VERSION}/AdGuardHome_linux_amd64.tar.gz" | tar -xz -C /opt; ` +
+      'fi; ' +
+      'test -x /opt/AdGuardHome/AdGuardHome',
     ]);
     if (r.exitCode !== 0) throw new Error(`AGH install failed: ${r.output}`);
   }
