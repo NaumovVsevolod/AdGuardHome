@@ -24,17 +24,19 @@ else
   cp "${repo_root}/dist/AdGuardHome_linux_amd64.tar.gz" "${archive}"
 fi
 
+# The binary is linux/amd64, so pin image builds to that platform (matters on
+# arm64 hosts where the default would otherwise build an arm64 image).
 echo "Building adguardhome-test:local (master image, binary embedded)..."
-docker build -f "${e2e_dir}/runtime/image/Dockerfile" -t adguardhome-test:local "${e2e_dir}"
+docker build --platform linux/amd64 -f "${e2e_dir}/runtime/image/Dockerfile" -t adguardhome-test:local "${e2e_dir}"
 
 if [ "${SYSTEMD:-1}" != "0" ]; then
   echo "Building adguardhome-systemd:local (privileged host for install/* tests)..."
-  docker build -f "${e2e_dir}/runtime/image/Dockerfile.systemd" -t adguardhome-systemd:local "${e2e_dir}"
+  docker build --platform linux/amd64 -f "${e2e_dir}/runtime/image/Dockerfile.systemd" -t adguardhome-systemd:local "${e2e_dir}"
 fi
 
 if [ "${CLIENT:-1}" != "0" ]; then
   echo "Building adguardhome-client:local..."
-  docker build -f "${e2e_dir}/runtime/image/Dockerfile.client" -t adguardhome-client:local "${e2e_dir}"
+  docker build --platform linux/amd64 -f "${e2e_dir}/runtime/image/Dockerfile.client" -t adguardhome-client:local "${e2e_dir}"
 fi
 
 echo "Done. Images:"

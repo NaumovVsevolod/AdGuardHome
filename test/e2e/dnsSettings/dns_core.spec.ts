@@ -88,8 +88,11 @@ test.describe('DNS Core Configuration Tests (Cases 4102, 4105, 4106)', () => {
         `Expected >=15 of 20 queries rate-limited, got ${errors} failed (${processed} processed).\n${output}`,
       ).toBeGreaterThanOrEqual(15);
     } finally {
-      await setDnsConfig(agh.baseUrl, { ratelimit: 0 }, api.authHeaders);
-      await upstream.stop();
+      try {
+        await setDnsConfig(agh.baseUrl, { ratelimit: 0 }, api.authHeaders);
+      } finally {
+        await upstream.stop();
+      }
     }
   });
 });

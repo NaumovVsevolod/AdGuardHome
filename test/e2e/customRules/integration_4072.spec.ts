@@ -24,9 +24,9 @@ test('4072 — Custom rule for specific client', async ({ agh, api }) => {
   // Mock upstream returns 1.2.3.4 for all A queries (default), satisfying the precondition.
   const upstream = new MockDnsServer(await allocateUdpPort('0.0.0.0'));
   await upstream.start();
-  await setDnsConfig(agh.baseUrl, { upstream_dns: [`${UPSTREAM_HOST}:${upstream.getPort()}`] }, api.authHeaders);
 
   try {
+    await setDnsConfig(agh.baseUrl, { upstream_dns: [`${UPSTREAM_HOST}:${upstream.getPort()}`] }, api.authHeaders);
     const addClientRes = await authed(api)(`${agh.baseUrl}/control/clients/add`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

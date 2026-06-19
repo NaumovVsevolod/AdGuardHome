@@ -46,10 +46,10 @@ test('4063/4064/4065/4066 — Query log & statistics enable/ignore', async ({ ag
   test.setTimeout(120_000);
   const mock = new MockDnsServer(await allocateUdpPort('0.0.0.0'));
   await mock.start();
-  await setDnsConfig(agh.baseUrl, { upstream_dns: [`${UPSTREAM_HOST}:${mock.getPort()}`] }, api.authHeaders);
-  const ctx = ctxOf(agh, api);
 
   try {
+    await setDnsConfig(agh.baseUrl, { upstream_dns: [`${UPSTREAM_HOST}:${mock.getPort()}`] }, api.authHeaders);
+    const ctx = ctxOf(agh, api);
     const blockedDomain = `blocked-4063.test`;
     const restoredStatsDomain = `restored-stats.test`;
     const baselineStatsDomain = `baseline-stats.test`;

@@ -14,7 +14,12 @@ async function useMock(agh: AdGuardContainer, api: AdGuardApiClient, answers: Ar
   const upstream = new MockDnsServer(await allocateUdpPort('0.0.0.0'));
   for (const { domain, type, data } of answers) upstream.setAnswers(domain, type, [{ type, data }]);
   await upstream.start();
-  await setDnsConfig(agh.baseUrl, { upstream_dns: [`${UPSTREAM_HOST}:${upstream.getPort()}`] }, api.authHeaders);
+  try {
+    await setDnsConfig(agh.baseUrl, { upstream_dns: [`${UPSTREAM_HOST}:${upstream.getPort()}`] }, api.authHeaders);
+  } catch (err) {
+    await upstream.stop();
+    throw err;
+  }
   return upstream;
 }
 

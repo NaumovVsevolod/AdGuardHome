@@ -42,7 +42,7 @@ test.describe('Extended DNS Settings Tests (Cases 4086-4116)', () => {
       expect(entry, 'No query-log entry for example.org within 10s').toBeTruthy();
       expect(entry.client, `Expected client 1.2.3.4 from X-Forwarded-For, got ${entry.client}`).toBe('1.2.3.4');
     } finally {
-      await inst.stop();
+      await inst.stop().catch(() => {});
       await upstream.stop();
     }
   });

@@ -63,7 +63,9 @@ test('4045 — Disable/Enable protection', async ({ page, agh, api }) => {
   const answersWhileDisabled = await resolveDnsAnswers(agh, blockedDomain, 'A');
   expect(answersWhileDisabled.length > 0 && !answersWhileDisabled.includes('0.0.0.0'),
     `Expected ${blockedDomain} to resolve while protection disabled, got ${JSON.stringify(answersWhileDisabled)}`).toBeTruthy();
-  expect(findNewestAnswerValue((await getQueryLog(api, { search: blockedDomain, limit: 20 })).data, disableStartedAt)).not.toBe('0.0.0.0');
+  const newestAnswer = findNewestAnswerValue((await getQueryLog(api, { search: blockedDomain, limit: 20 })).data, disableStartedAt);
+  expect(newestAnswer, `Expected a query-log answer for ${blockedDomain} while protection disabled`).toBeDefined();
+  expect(newestAnswer).not.toBe('0.0.0.0');
 
   const enableStartedAt = Date.now();
   await page.getByRole('button', { name: /enable protection/i }).click();

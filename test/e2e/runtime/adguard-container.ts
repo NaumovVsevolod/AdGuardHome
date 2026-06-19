@@ -66,7 +66,14 @@ export class AdGuardContainer {
     const host = container.getHost();
     const baseUrl = `http://${host}:${container.getMappedPort(WEB_PORT)}`;
     const agh = new AdGuardContainer(container, baseUrl, host, container.getMappedPort(DNS_PORT));
-    if (opts.config) await agh.writeConfigAndRestart(opts.config);
+    if (opts.config) {
+      try {
+        await agh.writeConfigAndRestart(opts.config);
+      } catch (err) {
+        await agh.stop().catch(() => {});
+        throw err;
+      }
+    }
     return agh;
   }
 

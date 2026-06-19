@@ -10,7 +10,7 @@ cases that fail on a real product regression — **84 tests** across three proje
 
 ## Layout
 
-```
+```text
 test/e2e/
   runtime/        container fixtures + the Docker image definitions (runtime/image)
   shared/         reusable API / DNS / query-log helpers

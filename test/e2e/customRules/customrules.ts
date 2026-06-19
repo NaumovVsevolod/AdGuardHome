@@ -166,8 +166,11 @@ function findBestMatchingQueryLogRecord(
     })
     .sort((left, right) => (getQueryLogRecordTimeMs(right) ?? 0) - (getQueryLogRecordTimeMs(left) ?? 0));
 
+  // Return only the record that matches the expectation, so the caller keeps
+  // polling (the query log is eventually-consistent) instead of settling on a
+  // query-matching-but-not-yet-expected record.
   const exactRecentRecord = recentRecords.find((record) => queryLogRecordMatchesExpected(record, expected));
-  return exactRecentRecord ?? latestRecord;
+  return exactRecentRecord;
 }
 
 function getAnswerValues(answers: QueryLogAnswer[] = []): string[] {

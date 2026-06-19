@@ -1,5 +1,4 @@
 import { test, expect } from '../runtime/fixtures';
-import { enableVerboseLogging } from './logsCheck.ts';
 import { waitForHttpOk } from './service-helpers.ts';
 
 test('4033 — Logs check', async ({ freshAgh }) => {

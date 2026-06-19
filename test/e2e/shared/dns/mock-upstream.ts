@@ -32,6 +32,11 @@ export async function startMockUpstream(
   entries: MockUpstreamEntry[],
 ): Promise<MockDnsServer> {
   const upstream = await createMockUpstream(entries);
-  await setDnsConfig(agh.baseUrl, { upstream_dns: [`${UPSTREAM_HOST}:${upstream.getPort()}`] }, api.authHeaders);
+  try {
+    await setDnsConfig(agh.baseUrl, { upstream_dns: [`${UPSTREAM_HOST}:${upstream.getPort()}`] }, api.authHeaders);
+  } catch (err) {
+    await upstream.stop();
+    throw err;
+  }
   return upstream;
 }
