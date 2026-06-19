@@ -57,6 +57,7 @@ export class MockDnsServer {
   private reservedSocket: boolean;
   private queries: DnsQuery[] = [];
   private delayMs: number = 0;
+  private pendingTimers = new Set<ReturnType<typeof setTimeout>>();
   private listening: boolean = false;
   private responses = new Map<string, MockDnsAnswer[]>();
   private nxDomains = new Set<string>();
@@ -114,7 +115,11 @@ export class MockDnsServer {
     this.queries.push(query);
 
     if (this.delayMs > 0) {
-      setTimeout(() => this.sendResponse(packet, rinfo), this.delayMs);
+      const timer = setTimeout(() => {
+        this.pendingTimers.delete(timer);
+        if (this.listening) this.sendResponse(packet, rinfo);
+      }, this.delayMs);
+      this.pendingTimers.add(timer);
     } else {
       this.sendResponse(packet, rinfo);
     }
@@ -218,6 +223,8 @@ export class MockDnsServer {
   }
 
   public async stop(): Promise<void> {
+    for (const timer of this.pendingTimers) clearTimeout(timer);
+    this.pendingTimers.clear();
     return new Promise((resolve) => {
       if (!this.listening) {
           try {

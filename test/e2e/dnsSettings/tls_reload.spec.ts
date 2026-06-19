@@ -29,7 +29,9 @@ test('4043 — Config reload on invalid TLS', async () => {
       'pkill -x AdGuardHome 2>/dev/null; sleep 0.5; ' +
       'timeout 8 /opt/AdGuardHome/AdGuardHome --no-check-update ' +
       '-c /opt/adguardhome/conf/AdGuardHome.yaml -w /opt/adguardhome/work 2>&1 | head -200']);
-    expect(broken.output, `Expected a TLS error on broken-cert start, got: ${broken.output.slice(0, 300)}`).toMatch(/tls|certificate|private key|pem|initializing|failed/i);
+    // Match the cert/key failure specifically — 'initializing'/'failed' alone
+    // would also match unrelated startup errors (port bind, config parse).
+    expect(broken.output, `Expected a TLS cert error on broken-cert start, got: ${broken.output.slice(0, 300)}`).toMatch(/tls|certificate|private key|pem/i);
 
     // Restore a valid cert and bring AGH back up.
     await agh.restoreTls();

@@ -112,7 +112,8 @@ test('4167 — DNS blocklists general', async ({ agh, api }) => {
     expect((await waitForBlockedAnswer(agh, firstDomain)).includes('0.0.0.0')).toBeTruthy();
     expect((await waitForBlockedAnswer(agh, secondDomain)).includes('0.0.0.0')).toBeTruthy();
 
-    expect((await refreshFilters(agh, api)) >= 0).toBeTruthy();
+    // refreshFilters asserts the request succeeded; verify blocking survives it.
+    await refreshFilters(agh, api);
     expect((await waitForBlockedAnswer(agh, firstDomain)).includes('0.0.0.0')).toBeTruthy();
     expect((await waitForBlockedAnswer(agh, secondDomain)).includes('0.0.0.0')).toBeTruthy();
 

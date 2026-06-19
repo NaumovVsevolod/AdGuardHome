@@ -50,22 +50,34 @@ export interface AghCluster {
 /** Start AGH and a companion `dnslookup` client on a shared Docker network. */
 export async function startCluster(): Promise<AghCluster> {
   const network = await new Network().start();
-  const aghContainer = await startWithRetry(() =>
-    new GenericContainer(AGH_IMAGE)
-      .withPullPolicy({ shouldPull: () => false })
-      .withNetwork(network).withNetworkAliases('agh')
-      .withExposedPorts(3000)
-      .withWaitStrategy(Wait.forHttp('/', 3000).forStatusCodeMatching(() => true))
-      .start());
-  const aghBaseUrl = `http://${aghContainer.getHost()}:${aghContainer.getMappedPort(3000)}`;
-  const clientC = await startWithRetry(() =>
-    new GenericContainer(CLIENT_IMAGE).withPullPolicy({ shouldPull: () => false }).withNetwork(network).start());
-  const ip = clientC.getIpAddress(network.getName());
-  return {
-    network,
-    aghContainer,
-    aghBaseUrl,
-    client: new ClientContainer(clientC, ip),
-    stop: async () => { await clientC.stop(); await aghContainer.stop(); await network.stop(); },
-  };
+  let aghContainer: StartedTestContainer | undefined;
+  let clientC: StartedTestContainer | undefined;
+  try {
+    aghContainer = await startWithRetry(() =>
+      new GenericContainer(AGH_IMAGE)
+        .withPullPolicy({ shouldPull: () => false })
+        .withNetwork(network).withNetworkAliases('agh')
+        .withExposedPorts(3000)
+        .withWaitStrategy(Wait.forHttp('/', 3000).forStatusCodeMatching(() => true))
+        .start());
+    const aghBaseUrl = `http://${aghContainer.getHost()}:${aghContainer.getMappedPort(3000)}`;
+    clientC = await startWithRetry(() =>
+      new GenericContainer(CLIENT_IMAGE).withPullPolicy({ shouldPull: () => false }).withNetwork(network).start());
+    const ip = clientC.getIpAddress(network.getName());
+    const agh = aghContainer;
+    const client = clientC;
+    return {
+      network,
+      aghContainer: agh,
+      aghBaseUrl,
+      client: new ClientContainer(client, ip),
+      stop: async () => { await client.stop(); await agh.stop(); await network.stop(); },
+    };
+  } catch (err) {
+    // Tear down whatever already started so a partial failure doesn't leak.
+    await clientC?.stop().catch(() => {});
+    await aghContainer?.stop().catch(() => {});
+    await network.stop().catch(() => {});
+    throw err;
+  }
 }

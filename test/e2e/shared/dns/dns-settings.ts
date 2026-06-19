@@ -42,30 +42,26 @@ export interface AccessConfig {
     blocked_hosts?: string[];
 }
 
-export async function setDnsConfig(baseUrl: string, config: DnsConfig, headers: HeadersInit = {}): Promise<Response> {
-    const combinedHeaders = {
-        'Content-Type': 'application/json',
-        ...headers,
-    };
-    const response = await fetch(`${baseUrl}/control/dns_config`, {
+// Precondition writes must fail loudly: a swallowed 4xx/5xx would otherwise
+// surface much later as a confusing DNS-answer timeout.
+async function postOrThrow(url: string, body: unknown, headers: HeadersInit, label: string): Promise<void> {
+    const response = await fetch(url, {
         method: 'POST',
-        headers: combinedHeaders,
-        body: JSON.stringify(config),
+        headers: { 'Content-Type': 'application/json', ...headers },
+        body: JSON.stringify(body),
     });
-    return response;
+    if (!response.ok) {
+        const details = await response.text().catch(() => '');
+        throw new Error(`${label} failed: ${response.status}${details ? ` ${details}` : ''}`);
+    }
 }
 
-export async function setAccessConfig(baseUrl: string, config: AccessConfig, headers: HeadersInit = {}): Promise<Response> {
-    const combinedHeaders = {
-        'Content-Type': 'application/json',
-        ...headers,
-    };
-    const response = await fetch(`${baseUrl}/control/access/set`, {
-        method: 'POST',
-        headers: combinedHeaders,
-        body: JSON.stringify(config),
-    });
-    return response;
+export async function setDnsConfig(baseUrl: string, config: DnsConfig, headers: HeadersInit = {}): Promise<void> {
+    await postOrThrow(`${baseUrl}/control/dns_config`, config, headers, 'setDnsConfig');
+}
+
+export async function setAccessConfig(baseUrl: string, config: AccessConfig, headers: HeadersInit = {}): Promise<void> {
+    await postOrThrow(`${baseUrl}/control/access/set`, config, headers, 'setAccessConfig');
 }
 
 export async function getDnsInfo(baseUrl: string, headers: HeadersInit = {}): Promise<DnsConfig> {
@@ -76,7 +72,7 @@ export async function getDnsInfo(baseUrl: string, headers: HeadersInit = {}): Pr
     return await response.json();
 }
 
-export async function clearDnsCache(baseUrl: string, headers: HeadersInit = {}): Promise<Response> {
+export async function clearDnsCache(baseUrl: string, headers: HeadersInit = {}): Promise<void> {
     // Try /control/cache_clear first, if 404 try /control/dns_cache_clear
     let response = await fetch(`${baseUrl}/control/cache_clear`, {
         method: 'POST',
@@ -88,5 +84,8 @@ export async function clearDnsCache(baseUrl: string, headers: HeadersInit = {}):
             headers,
         });
     }
-    return response;
+    if (!response.ok) {
+        const details = await response.text().catch(() => '');
+        throw new Error(`clearDnsCache failed: ${response.status}${details ? ` ${details}` : ''}`);
+    }
 }

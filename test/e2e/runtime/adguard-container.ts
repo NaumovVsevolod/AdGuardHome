@@ -118,10 +118,14 @@ export class AdGuardContainer {
       throw new Error(`Unsafe rules filename: ${filename}`);
     }
     const b64 = Buffer.from(content, 'utf8').toString('base64');
-    await this.exec(['sh', '-c',
+    const r = await this.exec(['sh', '-c',
       `mkdir -p /tmp/rules && echo '${b64}' | base64 -d > /tmp/rules/${filename}` +
       ` && (pgrep -x busybox >/dev/null || setsid busybox httpd -p 127.0.0.1:8055 -h /tmp/rules </dev/null >/dev/null 2>&1 &)` +
-      ` && sleep 0.3`]);
+      // Poll until the file is actually served instead of a fixed sleep.
+      ` && for _ in $(seq 1 30); do curl -fsS -o /dev/null http://127.0.0.1:8055/${filename} && exit 0; sleep 0.1; done; exit 1`]);
+    if (r.exitCode !== 0) {
+      throw new Error(`serveRules(${filename}) failed to serve: ${r.output}`);
+    }
     return `http://127.0.0.1:8055/${filename}`;
   }
 

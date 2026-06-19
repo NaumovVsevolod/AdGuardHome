@@ -78,8 +78,12 @@ test.describe('DNS Core Configuration Tests (Cases 4102, 4105, 4106)', () => {
       const { output } = await agh.exec([
         'godnsbench', '-a', '127.0.0.1:53', '-q', '{random}.org', '-c', '20', '-p', '20', '-t', '1',
       ]);
+      const processedMatch = output.match(/Processed queries:\s*(\d+)/);
+      // Fail loudly if godnsbench output isn't what we parse, rather than
+      // silently coercing a missing count to 0.
+      expect(processedMatch, `godnsbench output not parseable:\n${output}`).toBeTruthy();
       const errors = Number(output.match(/Errors count:\s*(\d+)/)?.[1] ?? 0);
-      const processed = Number(output.match(/Processed queries:\s*(\d+)/)?.[1] ?? 0);
+      const processed = Number(processedMatch?.[1] ?? 0);
       expect(errors,
         `Expected >=15 of 20 queries rate-limited, got ${errors} failed (${processed} processed).\n${output}`,
       ).toBeGreaterThanOrEqual(15);

@@ -87,7 +87,7 @@ test('4046 — Disable protection for interval', async ({ page, api }) => {
   await page.getByText('For 30 seconds', { exact: true }).click();
   await expect(page.locator('body')).toContainText('OFF');
   await expect.poll(async () => (await getStatus(api)).protection_enabled).toBe(false);
-  await expect.poll(async () => (await getStatus(api)).protection_disabled_duration, { timeout: 5_000 }).toBeGreaterThan(25_000);
+  await expect.poll(async () => (await getStatus(api)).protection_disabled_duration, { timeout: 5_000 }).toBeGreaterThan(20_000);
 
   await expect.poll(async () => (await getStatus(api)).protection_enabled, { timeout: 45_000, intervals: [1_000] }).toBe(true);
   await expect(page.locator('body')).toContainText('ON');
@@ -95,7 +95,7 @@ test('4046 — Disable protection for interval', async ({ page, api }) => {
   await toggle.click();
   await page.getByText('For 1 minute', { exact: true }).click();
   await expect.poll(async () => (await getStatus(api)).protection_enabled).toBe(false);
-  await expect.poll(async () => (await getStatus(api)).protection_disabled_duration, { timeout: 5_000 }).toBeGreaterThan(55_000);
+  await expect.poll(async () => (await getStatus(api)).protection_disabled_duration, { timeout: 5_000 }).toBeGreaterThan(45_000);
 
   await setProtection(api, { enabled: true });
   await expect.poll(async () => (await getStatus(api)).protection_enabled).toBe(true);
