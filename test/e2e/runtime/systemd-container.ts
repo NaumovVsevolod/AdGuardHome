@@ -53,7 +53,7 @@ export class SystemdContainer {
     const r = await this.exec([
       'bash',
       '-c',
-      'set -e; ' +
+      'set -eo pipefail; ' +
       'if [ -f /opt/agh-dist/AdGuardHome_linux_amd64.tar.gz ]; then ' +
       '  tar -xz -f /opt/agh-dist/AdGuardHome_linux_amd64.tar.gz -C /opt; ' +
       'else ' +

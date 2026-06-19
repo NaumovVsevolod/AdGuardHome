@@ -72,10 +72,11 @@ export async function startCluster(): Promise<AghCluster> {
       aghBaseUrl,
       client: new ClientContainer(client, ip),
       stop: async () => {
-        // Best-effort teardown: one failing stop must not skip the others.
-        await client.stop().catch(() => {});
-        await agh.stop().catch(() => {});
-        await network.stop().catch(() => {});
+        // Best-effort teardown: one failing stop must not skip the others, but
+        // surface errors so a leak isn't completely silent.
+        await client.stop().catch((e) => console.warn('[startCluster] client.stop failed:', e));
+        await agh.stop().catch((e) => console.warn('[startCluster] agh.stop failed:', e));
+        await network.stop().catch((e) => console.warn('[startCluster] network.stop failed:', e));
       },
     };
   } catch (err) {

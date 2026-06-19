@@ -35,6 +35,7 @@ test.describe('Extended DNS Settings Tests (Cases 4086-4116)', () => {
       const deadline = Date.now() + 10_000;
       while (Date.now() < deadline) {
         const res = await authed(api)(`${inst.baseUrl}/control/querylog?search=example.org`);
+        if (!res.ok) { await new Promise((r) => setTimeout(r, 300)); continue; }
         const data = await res.json() as { data?: Array<{ client?: string }> };
         if (data.data?.length) { entry = data.data[0]; break; }
         await new Promise((r) => setTimeout(r, 300));
