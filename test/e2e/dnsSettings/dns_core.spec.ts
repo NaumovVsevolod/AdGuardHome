@@ -1,5 +1,5 @@
 import { test, expect } from '../runtime/fixtures';
-import { clearDnsCache, setDnsConfig, getDnsInfo } from './dns_settings.ts';
+import { clearDnsCache, setDnsConfig, getDnsInfo } from '../shared/dns/dns-settings.ts';
 import { waitFor } from '../shared/polling/retry.ts';
 
 const blockedDomain = `blocked-mode-static.test`;

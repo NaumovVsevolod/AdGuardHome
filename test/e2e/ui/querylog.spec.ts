@@ -8,7 +8,7 @@ import {
   addClient, clearQueryLog, getClients, getQueryLog, setAccessList, setCustomRules, updateProfile,
   type AdGuardApiClient,
 } from '../shared/api/adguard-api.ts';
-import { getDnsInfo, setDnsConfig } from '../dnsSettings/dns_settings.ts';
+import { getDnsInfo, setDnsConfig } from '../shared/dns/dns-settings.ts';
 import {
   clientIdentifierInput, clientNameInput, customRulesTextarea, loginToAdGuardUi,
   persistentClientRow, queryLogRow, queryLogSearchInput, saveClientForm,

@@ -1,5 +1,5 @@
-import { allocateUdpPort, MockDnsServer } from '../../dnsSettings/MockDnsServer.ts';
-import { setDnsConfig } from '../../dnsSettings/dns_settings.ts';
+import { allocateUdpPort, MockDnsServer } from './mock-dns-server.ts';
+import { setDnsConfig } from './dns-settings.ts';
 import { UPSTREAM_HOST } from '../api/test-fetch.ts';
 import type { AdGuardContainer } from '../../runtime/adguard-container';
 import type { AdGuardApiClient } from '../api/adguard-api';

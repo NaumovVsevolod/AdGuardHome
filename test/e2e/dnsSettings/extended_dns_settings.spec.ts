@@ -2,8 +2,8 @@ import assert from 'node:assert/strict';
 import { test, expect } from '../runtime/fixtures';
 import { AdGuardContainer } from '../runtime/adguard-container';
 import { UPSTREAM_HOST } from '../shared/api/test-fetch.ts';
-import { setDnsConfig, getDnsInfo, clearDnsCache, setAccessConfig } from './dns_settings.ts';
-import { allocateUdpPort, MockDnsServer } from './MockDnsServer.ts';
+import { setDnsConfig, getDnsInfo, clearDnsCache, setAccessConfig } from '../shared/dns/dns-settings.ts';
+import { allocateUdpPort, MockDnsServer } from '../shared/dns/mock-dns-server.ts';
 
 test.describe('Extended DNS Settings Tests (Cases 4086-4116)', () => {
   test('4098 — trusted_proxies X-Forwarded-For', async () => {

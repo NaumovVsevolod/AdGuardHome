@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { test } from '../runtime/fixtures';
 import { UPSTREAM_HOST } from '../shared/api/test-fetch.ts';
-import { MockDnsServer, allocateUdpPort } from './MockDnsServer.ts';
-import { setDnsConfig } from './dns_settings.ts';
+import { MockDnsServer, allocateUdpPort } from '../shared/dns/mock-dns-server.ts';
+import { setDnsConfig } from '../shared/dns/dns-settings.ts';
 import type { AdGuardContainer } from '../runtime/adguard-container';
 
 // Fire many unique-domain A queries from inside the container in a single exec

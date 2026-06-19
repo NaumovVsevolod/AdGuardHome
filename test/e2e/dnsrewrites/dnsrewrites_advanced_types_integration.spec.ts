@@ -3,10 +3,10 @@ import { test } from '../runtime/fixtures';
 import { authed, UPSTREAM_HOST } from '../shared/api/test-fetch.ts';
 
 import { addRewrite, deleteRewrite, updateRewriteSettings, type DnsRewrite } from './dnsrewrites.ts';
-import { allocateUdpPort, MockDnsServer } from '../dnsSettings/MockDnsServer.ts';
+import { allocateUdpPort, MockDnsServer } from '../shared/dns/mock-dns-server.ts';
 import { waitFor } from '../shared/polling/retry.ts';
 import { waitForDnsStatus } from '../shared/dns/dns-test-helpers.ts';
-import { setDnsConfig } from '../dnsSettings/dns_settings.ts';
+import { setDnsConfig } from '../shared/dns/dns-settings.ts';
 import type { AdGuardContainer } from '../runtime/adguard-container';
 import type { AdGuardApiClient } from '../shared/api/adguard-api';
 

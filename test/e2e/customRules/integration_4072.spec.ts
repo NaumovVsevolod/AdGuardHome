@@ -6,8 +6,8 @@ import { authed, UPSTREAM_HOST } from '../shared/api/test-fetch.ts';
 import { runCustomRuleTestCase, type CustomRuleTestCase } from './customrules.ts';
 import { clearQueryLog } from '../shared/api/adguard-api.ts';
 import { waitFor } from '../shared/polling/retry.ts';
-import { allocateUdpPort, MockDnsServer } from '../dnsSettings/MockDnsServer.ts';
-import { setDnsConfig } from '../dnsSettings/dns_settings.ts';
+import { allocateUdpPort, MockDnsServer } from '../shared/dns/mock-dns-server.ts';
+import { setDnsConfig } from '../shared/dns/dns-settings.ts';
 import type { AdGuardContainer } from '../runtime/adguard-container';
 import type { AdGuardApiClient } from '../shared/api/adguard-api';
 

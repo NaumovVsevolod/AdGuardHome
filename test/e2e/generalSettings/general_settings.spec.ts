@@ -6,8 +6,8 @@ import { waitFor, sleep } from '../shared/polling/retry.ts';
 import { clearQueryLog, getQueryLog, updateQueryLogConfig, type QueryLogEntry } from '../shared/adguard/querylog.ts';
 import { clearStats, getStats, updateStatsConfig } from '../shared/adguard/stats.ts';
 import { setCustomRules } from '../shared/adguard/filtering.ts';
-import { allocateUdpPort, MockDnsServer } from '../dnsSettings/MockDnsServer.ts';
-import { setDnsConfig } from '../dnsSettings/dns_settings.ts';
+import { allocateUdpPort, MockDnsServer } from '../shared/dns/mock-dns-server.ts';
+import { setDnsConfig } from '../shared/dns/dns-settings.ts';
 import { AdGuardContainer } from '../runtime/adguard-container';
 import type { AdGuardApiClient } from '../shared/api/adguard-api';
 

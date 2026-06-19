@@ -7,7 +7,7 @@ import { waitForDnsResult } from '../shared/dns/dns-test-helpers.ts';
 import { setCustomRules } from '../shared/adguard/filtering.ts';
 import { addClient, updateClient, deleteClient, listClients } from '../shared/adguard/clients.ts';
 import { clearQueryLog, getQueryLog } from '../shared/adguard/querylog.ts';
-import { setDnsConfig } from '../dnsSettings/dns_settings.ts';
+import { setDnsConfig } from '../shared/dns/dns-settings.ts';
 import { createMockUpstream } from '../shared/dns/mock-upstream.ts';
 import type { AdGuardContainer } from '../runtime/adguard-container';
 

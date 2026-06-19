@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { test } from '../runtime/fixtures';
 import { UPSTREAM_HOST } from '../shared/api/test-fetch.ts';
-import { MockDnsServer, allocateUdpPort } from './MockDnsServer.ts';
-import { setDnsConfig, getDnsInfo } from './dns_settings.ts';
+import { MockDnsServer, allocateUdpPort } from '../shared/dns/mock-dns-server.ts';
+import { setDnsConfig, getDnsInfo } from '../shared/dns/dns-settings.ts';
 
 test.describe('Case 4099: SOA and NS queries served by private rDNS', () => {
   test('4099 — Private rDNS SOA/NS queries', async ({ agh, api }) => {

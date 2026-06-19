@@ -1,6 +1,6 @@
 import assert from 'node:assert';
 import { test } from '../runtime/fixtures';
-import { setDnsConfig, setAccessConfig, getDnsInfo } from './dns_settings.ts';
+import { setDnsConfig, setAccessConfig, getDnsInfo } from '../shared/dns/dns-settings.ts';
 
 test.describe('DNS Cache & Access Tests (Cases 4108, 4109, 4110, 4112)', () => {
   // Case #4112: Allowed Clients. Queries run from inside the container (client

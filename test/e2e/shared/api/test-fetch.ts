@@ -13,10 +13,11 @@ function toHeaderRecord(headers: HeadersInit | undefined): Record<string, string
 // Node's global fetch (undici) keeps connections alive and pools them. After an
 // idle gap (e.g. while DNS is polled via container exec) AGH can close a pooled
 // keep-alive connection; the next reused socket then throws "other side closed".
-// That's a client transport artifact, not a product fault — retry it. We also
-// cap each request so a stuck endpoint fails fast and is retried instead of
-// hanging until the test timeout.
-const TRANSIENT = /other side closed|ECONNRESET|UND_ERR_SOCKET|socket hang up|terminated|aborted|timeout/i;
+// That's a client transport artifact, not a product fault — retry only this
+// connection-reset family. Request timeouts/aborts are NOT retried (they may be
+// a genuinely slow or stuck endpoint), but each request is still capped so it
+// fails fast instead of hanging until the test timeout.
+const TRANSIENT = /other side closed|ECONNRESET|UND_ERR_SOCKET|socket hang up/i;
 const REQUEST_TIMEOUT_MS = 25_000;
 const MAX_ATTEMPTS = 3;
 

@@ -2,13 +2,13 @@ import assert from 'node:assert/strict';
 import { test } from '../runtime/fixtures';
 import { authed, UPSTREAM_HOST, ctxOf } from '../shared/api/test-fetch.ts';
 
-import { allocateUdpPort, MockDnsServer } from '../dnsSettings/MockDnsServer.ts';
+import { allocateUdpPort, MockDnsServer } from '../shared/dns/mock-dns-server.ts';
 import { waitFor } from '../shared/polling/retry.ts';
 import { waitForDnsResult } from '../shared/dns/dns-test-helpers.ts';
 import { setCustomRules } from '../shared/adguard/filtering.ts';
 import { addBlockList } from '../blocklists/blocklists.ts';
 import { addClient, updateClient } from '../shared/adguard/clients.ts';
-import { setDnsConfig } from '../dnsSettings/dns_settings.ts';
+import { setDnsConfig } from '../shared/dns/dns-settings.ts';
 import { startMockUpstream } from '../shared/dns/mock-upstream.ts';
 import type { AdGuardContainer } from '../runtime/adguard-container';
 
