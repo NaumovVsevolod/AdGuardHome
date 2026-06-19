@@ -1,3 +1,5 @@
+// @egress — every test here verifies real upstream protocols (Plain/DoT/DoH/DoQ)
+// against public resolvers (Quad9/Google/Cloudflare); these cannot be mocked.
 import { setTimeout } from 'node:timers/promises';
 import { test, expect } from '../runtime/fixtures';
 import { authed } from '../shared/api/test-fetch.ts';

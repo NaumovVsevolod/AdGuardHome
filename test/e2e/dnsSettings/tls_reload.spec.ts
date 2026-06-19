@@ -8,7 +8,9 @@ test('4043 — Config reload on invalid TLS', async () => {
   const agh = await AdGuardContainer.startCustom({ extraPorts: [4433] });
   const tlsCfg = [
     'http:', '  address: 0.0.0.0:3000',
-    'dns:', '  bind_hosts: [0.0.0.0]', '  port: 53', '  upstream_dns: [8.8.8.8]',
+    // Upstream is incidental (this test only exercises TLS cert reload, never
+    // resolves through it); a non-routable address keeps it off the internet.
+    'dns:', '  bind_hosts: [0.0.0.0]', '  port: 53', '  upstream_dns: [192.0.2.1]',
     'tls:', '  enabled: true', '  server_name: localhost', '  force_https: false',
     '  port_https: 4433', '  allow_unencrypted_doh: true',
     '  certificate_path: /opt/adguardhome/conf/cert.pem', '  private_key_path: /opt/adguardhome/conf/key.pem',
