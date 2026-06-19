@@ -1,5 +1,6 @@
 import { test, expect } from '../runtime/fixtures';
 import { AdGuardContainer } from '../runtime/adguard-container';
+import { ADMIN_PASSWORD_HASH } from '../shared/adguard/admin.ts';
 
 // Case 4043: starting with a broken TLS cert surfaces a TLS error; restoring a
 // valid cert recovers the web interface.
@@ -15,7 +16,7 @@ test('4043 — Config reload on invalid TLS', async () => {
     '  port_https: 4433', '  allow_unencrypted_doh: true',
     '  certificate_path: /opt/adguardhome/conf/cert.pem', '  private_key_path: /opt/adguardhome/conf/key.pem',
     'users:', '  - name: admin',
-    '    password: $2b$12$aw6lk4Cdfc/b69rFQVqSrutVmh6UJ.ORxpQ10.fj685NVWmDiDO9O',
+    `    password: ${ADMIN_PASSWORD_HASH}`,
     'schema_version: 32', '',
   ].join('\n');
   try {

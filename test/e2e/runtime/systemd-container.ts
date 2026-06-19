@@ -1,5 +1,6 @@
 import { GenericContainer, type StartedTestContainer, Wait } from 'testcontainers';
 import { startWithRetry } from './adguard-container';
+import { ADMIN_PASSWORD_HASH } from '../shared/adguard/admin.ts';
 
 const IMAGE = process.env.AGH_SYSTEMD_IMAGE ?? 'adguardhome-systemd:local';
 const AGH_VERSION = process.env.ADGUARD_VERSION ?? 'v0.107.52';
@@ -67,7 +68,7 @@ export class SystemdContainer {
       '  port: 53',
       'users:',
       '  - name: admin',
-      '    password: $2b$12$aw6lk4Cdfc/b69rFQVqSrutVmh6UJ.ORxpQ10.fj685NVWmDiDO9O',
+      `    password: ${ADMIN_PASSWORD_HASH}`,
       'log:',
       '  file: /var/log/AdGuardHome.log',
       '  verbose: false',

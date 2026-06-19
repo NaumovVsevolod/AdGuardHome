@@ -4,6 +4,7 @@ import { UPSTREAM_HOST, authed } from '../shared/api/test-fetch.ts';
 import { setDnsConfig, getDnsInfo, clearDnsCache, setAccessConfig } from '../shared/dns/dns-settings.ts';
 import { allocateUdpPort, MockDnsServer } from '../shared/dns/mock-dns-server.ts';
 import { createMockUpstream } from '../shared/dns/mock-upstream.ts';
+import { ADMIN_PASSWORD_HASH } from '../shared/adguard/admin.ts';
 
 test.describe('Extended DNS Settings Tests (Cases 4086-4116)', () => {
   test('4098 — trusted_proxies X-Forwarded-For', async () => {
@@ -19,7 +20,7 @@ test.describe('Extended DNS Settings Tests (Cases 4086-4116)', () => {
         'dns:', '  bind_hosts: [0.0.0.0]', '  port: 53', `  upstream_dns: [${UPSTREAM_HOST}:${upstream.getPort()}]`,
         'querylog:', '  enabled: true', '  interval: 24h',
         'users:', '  - name: admin',
-        '    password: $2b$12$aw6lk4Cdfc/b69rFQVqSrutVmh6UJ.ORxpQ10.fj685NVWmDiDO9O',
+        `    password: ${ADMIN_PASSWORD_HASH}`,
         'schema_version: 32', '',
       ].join('\n'),
     });

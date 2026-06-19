@@ -1,5 +1,6 @@
 import { GenericContainer, type StartedTestContainer, Wait } from 'testcontainers';
 import { loginToAdGuardApi, type AdGuardApiClient } from '../shared/api/adguard-api';
+import { ADMIN_USERNAME, ADMIN_PASSWORD } from '../shared/adguard/admin.ts';
 
 /** Retry a container start once on transient daemon errors (image resolution, races). */
 export async function startWithRetry(
@@ -27,7 +28,7 @@ export interface DnsRecord {
 const IMAGE = process.env.AGH_IMAGE ?? 'adguardhome-test:local';
 const WEB_PORT = 3000;
 const DNS_PORT = 53;
-const CREDENTIALS = { username: 'admin', password: 'password' };
+const CREDENTIALS = { username: ADMIN_USERNAME, password: ADMIN_PASSWORD };
 
 /**
  * A running AdGuard Home instance backed by a testcontainer.
@@ -177,22 +178,6 @@ export class AdGuardContainer {
   /** Regenerate a valid cert in place. */
   async restoreTls(): Promise<void> {
     await this.setupTls();
-  }
-
-  /**
-   * Wait for new container-stdout log lines (beyond `previous`) matching `pattern`;
-   * returns the new delta text. AGH (running mode) logs to the container's stdout (PID 1).
-   */
-  async serviceLogDelta(previous: string, pattern: RegExp, opts: { timeoutMs?: number } = {}): Promise<string> {
-    const timeoutMs = opts.timeoutMs ?? 15_000;
-    const startedAt = Date.now();
-    while (Date.now() - startedAt < timeoutMs) {
-      const all = (await this.exec(['bash', '-c', 'cat /proc/1/fd/1 2>/dev/null || true'])).output;
-      const delta = all.length >= previous.length ? all.slice(previous.length) : all;
-      if (pattern.test(delta)) return delta;
-      await new Promise((r) => setTimeout(r, 500));
-    }
-    throw new Error(`serviceLogDelta: pattern ${pattern} not seen within ${timeoutMs}ms`);
   }
 
   async stop(): Promise<void> {
