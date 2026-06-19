@@ -1,5 +1,4 @@
-import assert from 'node:assert/strict';
-import { test } from '../runtime/fixtures';
+import { test, expect } from '../runtime/fixtures';
 import { UPSTREAM_HOST } from '../shared/api/test-fetch.ts';
 import { MockDnsServer, allocateUdpPort } from '../shared/dns/mock-dns-server.ts';
 import { setDnsConfig } from '../shared/dns/dns-settings.ts';
@@ -39,7 +38,7 @@ test('4086 — Upstream DNS mode', async ({ agh, api }) => {
       mocks.forEach((m) => m.clearQueries());
       await floodQueries(agh, 'lb', 50);
       const queries = mocks.map((m) => m.getQueries().length);
-      assert.ok(queries.every((q) => q > 0), `All servers should receive queries. Got: ${queries}`);
+      expect(queries.every((q) => q > 0), `All servers should receive queries. Got: ${queries}`).toBeTruthy();
     });
 
     await test.step('Parallel Requests', async () => {
@@ -48,7 +47,7 @@ test('4086 — Upstream DNS mode', async ({ agh, api }) => {
       await floodQueries(agh, 'parallel', 10);
       const queries = mocks.map((m) => m.getQueries().length);
       // Parallel fans every query out to all upstreams.
-      assert.ok(queries.every((q) => q >= 8), `All servers should receive almost all queries. Got: ${queries}`);
+      expect(queries.every((q) => q >= 8), `All servers should receive almost all queries. Got: ${queries}`).toBeTruthy();
       // Timing assertions are omitted: per-query `dnslookup exec` overhead makes
       // sub-second wall-clock checks unreliable in the containerized runtime.
     });
@@ -61,7 +60,7 @@ test('4086 — Upstream DNS mode', async ({ agh, api }) => {
       mocks.forEach((m) => m.clearQueries());
       await floodQueries(agh, 'fastest', 30);
       const queries = mocks.map((m) => m.getQueries().length);
-      assert.ok(queries.every((q) => q > 0), `All servers should receive queries. Got: ${queries}`);
+      expect(queries.every((q) => q > 0), `All servers should receive queries. Got: ${queries}`).toBeTruthy();
     });
   } finally {
     for (const m of mocks) await m.stop();

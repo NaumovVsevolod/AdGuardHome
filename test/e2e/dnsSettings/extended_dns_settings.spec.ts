@@ -1,7 +1,6 @@
-import assert from 'node:assert/strict';
 import { test, expect } from '../runtime/fixtures';
 import { AdGuardContainer } from '../runtime/adguard-container';
-import { UPSTREAM_HOST } from '../shared/api/test-fetch.ts';
+import { UPSTREAM_HOST, authed } from '../shared/api/test-fetch.ts';
 import { setDnsConfig, getDnsInfo, clearDnsCache, setAccessConfig } from '../shared/dns/dns-settings.ts';
 import { allocateUdpPort, MockDnsServer } from '../shared/dns/mock-dns-server.ts';
 
@@ -29,13 +28,13 @@ test.describe('Extended DNS Settings Tests (Cases 4086-4116)', () => {
       let entry: { client?: string } | undefined;
       const deadline = Date.now() + 10_000;
       while (Date.now() < deadline) {
-        const res = await fetch(`${inst.baseUrl}/control/querylog?search=example.org`, { headers: api.authHeaders as Record<string, string> });
+        const res = await authed(api)(`${inst.baseUrl}/control/querylog?search=example.org`);
         const data = await res.json() as { data?: Array<{ client?: string }> };
         if (data.data?.length) { entry = data.data[0]; break; }
         await new Promise((r) => setTimeout(r, 300));
       }
-      assert.ok(entry, 'No query-log entry for example.org within 10s');
-      assert.equal(entry.client, '1.2.3.4', `Expected client 1.2.3.4 from X-Forwarded-For, got ${entry.client}`);
+      expect(entry, 'No query-log entry for example.org within 10s').toBeTruthy();
+      expect(entry.client, `Expected client 1.2.3.4 from X-Forwarded-For, got ${entry.client}`).toBe('1.2.3.4');
     } finally {
       await inst.stop();
     }

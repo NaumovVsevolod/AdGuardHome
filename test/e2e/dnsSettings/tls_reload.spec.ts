@@ -1,5 +1,4 @@
-import assert from 'node:assert/strict';
-import { test } from '../runtime/fixtures';
+import { test, expect } from '../runtime/fixtures';
 import { AdGuardContainer } from '../runtime/adguard-container';
 
 // Case 4043: starting with a broken TLS cert surfaces a TLS error; restoring a
@@ -28,18 +27,17 @@ test('4043 — Config reload on invalid TLS', async () => {
       'pkill -x AdGuardHome 2>/dev/null; sleep 0.5; ' +
       'timeout 8 /opt/AdGuardHome/AdGuardHome --no-check-update ' +
       '-c /opt/adguardhome/conf/AdGuardHome.yaml -w /opt/adguardhome/work 2>&1 | head -200']);
-    assert.match(broken.output, /tls|certificate|private key|pem|initializing|failed/i,
-      `Expected a TLS error on broken-cert start, got: ${broken.output.slice(0, 300)}`);
+    expect(broken.output, `Expected a TLS error on broken-cert start, got: ${broken.output.slice(0, 300)}`).toMatch(/tls|certificate|private key|pem|initializing|failed/i);
 
     // Restore a valid cert and bring AGH back up.
     await agh.restoreTls();
     await agh.exec(['bash', '-c', '/usr/local/bin/agh-apply.sh']);
     const ok = await agh.exec(['bash', '-c', 'curl -fsS --max-time 5 -o /dev/null http://127.0.0.1:3000/ && echo up']);
-    assert.match(ok.output, /up/, 'Expected AGH web to recover after restoring a valid cert');
+    expect(ok.output, 'Expected AGH web to recover after restoring a valid cert').toMatch(/up/);
 
     // The actual fix is TLS coming back: verify HTTPS on 4433 serves again.
     const https = await agh.exec(['bash', '-c', 'curl -fsSk --max-time 5 -o /dev/null https://127.0.0.1:4433/login.html && echo https-up']);
-    assert.match(https.output, /https-up/, 'Expected HTTPS on 4433 to recover after restoring a valid cert');
+    expect(https.output, 'Expected HTTPS on 4433 to recover after restoring a valid cert').toMatch(/https-up/);
   } finally {
     await agh.stop();
   }

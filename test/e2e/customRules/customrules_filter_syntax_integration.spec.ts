@@ -1,5 +1,4 @@
-import assert from 'node:assert/strict';
-import { test } from '../runtime/fixtures';
+import { test, expect } from '../runtime/fixtures';
 import { authed, UPSTREAM_HOST, ctxOf } from '../shared/api/test-fetch.ts';
 
 import { allocateUdpPort, MockDnsServer } from '../shared/dns/mock-dns-server.ts';
@@ -21,7 +20,7 @@ test('4075 — $dnsrewrite modifier: IPv4/A', async ({ agh, api }) => {
   try {
     await setCustomRules(ctxOf(agh, api), [`||${domain}^$dnsrewrite=192.0.2.20`]);
     const { answers } = await waitForDnsAnswer(agh, domain, 'A', (a) => a.includes('192.0.2.20'));
-    assert.ok(answers.includes('192.0.2.20'), `Expected 192.0.2.20 from $dnsrewrite, got ${answers}`);
+    expect(answers.includes('192.0.2.20'), `Expected 192.0.2.20 from $dnsrewrite, got ${answers}`).toBeTruthy();
   } finally { await upstream.stop(); }
 });
 
@@ -32,7 +31,7 @@ test('4075 — $dnsrewrite modifier: hostname/CNAME', async ({ agh, api }) => {
   try {
     await setCustomRules(ctxOf(agh, api), [`||${domain}^$dnsrewrite=${CNAME_TARGET}`]);
     const { answers } = await waitForDnsAnswer(agh, domain, 'A', (a) => a.some((v) => v.includes(CNAME_TARGET) || v === '203.0.113.2'));
-    assert.ok(answers.some((v) => v.includes(CNAME_TARGET) || v === '203.0.113.2'), `Expected CNAME target or resolved IP, got ${answers}`);
+    expect(answers.some((v) => v.includes(CNAME_TARGET) || v === '203.0.113.2'), `Expected CNAME target or resolved IP, got ${answers}`).toBeTruthy();
   } finally { await upstream.stop(); }
 });
 
@@ -42,7 +41,7 @@ test('4075 — $dnsrewrite modifier: REFUSED', async ({ agh, api }) => {
   try {
     await setCustomRules(ctxOf(agh, api), [`||${domain}^$dnsrewrite=REFUSED`]);
     const { rcode } = await waitForDnsAnswer(agh, domain, 'A', (_a, rc) => rc === 'REFUSED');
-    assert.equal(rcode, 'REFUSED');
+    expect(rcode).toBe('REFUSED');
   } finally { await upstream.stop(); }
 });
 
@@ -54,7 +53,7 @@ test('4075 — $dnsrewrite modifier: IPv6/AAAA', async ({ agh, api }) => {
     await setCustomRules(ctxOf(agh, api), [`||${domain}^$dnsrewrite=${REWRITTEN_AAAA}`]);
     const { answers } = await waitForDnsAnswer(agh, domain, 'AAAA',
       (a) => a.some((v) => v.replace(/^0+/g, '') === REWRITTEN_AAAA.replace(/^0+/g, '') || v === REWRITTEN_AAAA));
-    assert.ok(answers.length > 0, `Expected AAAA answer from $dnsrewrite, got ${answers}`);
+    expect(answers.length > 0, `Expected AAAA answer from $dnsrewrite, got ${answers}`).toBeTruthy();
   } finally { await upstream.stop(); }
 });
 
@@ -68,10 +67,10 @@ test('4079 — Blocked by CNAME', async ({ agh, api }) => {
   try {
     await setDnsConfig(agh.baseUrl, { upstream_dns: [`${UPSTREAM_HOST}:${upstream.getPort()}`] }, api.authHeaders);
     const before = await waitForDnsAnswer(agh, domain, 'A', (a) => a.includes('203.0.113.5'));
-    assert.ok(before.answers.includes('203.0.113.5'), 'Precondition: root domain should resolve before blocking');
+    expect(before.answers.includes('203.0.113.5'), 'Precondition: root domain should resolve before blocking').toBeTruthy();
     await setCustomRules(ctxOf(agh, api), [`||${CNAME_TARGET}^`]);
     const after = await waitForDnsAnswer(agh, domain, 'A', (a) => a.includes('0.0.0.0'));
-    assert.ok(after.answers.includes('0.0.0.0'), `Expected 0.0.0.0 after blocking CNAME target, got ${after.answers}`);
+    expect(after.answers.includes('0.0.0.0'), `Expected 0.0.0.0 after blocking CNAME target, got ${after.answers}`).toBeTruthy();
   } finally { await upstream.stop(); }
 });
 
@@ -81,7 +80,7 @@ test('4077 — $important modifier: block over allowlist', async ({ agh, api }) 
   try {
     await setCustomRules(ctxOf(agh, api), [`@@||${domain}^`, `||${domain}^$important`]);
     const { answers } = await waitForDnsAnswer(agh, domain, 'A', (a) => a.includes('0.0.0.0'));
-    assert.ok(answers.includes('0.0.0.0'), `Expected $important to override allowlist, got ${answers}`);
+    expect(answers.includes('0.0.0.0'), `Expected $important to override allowlist, got ${answers}`).toBeTruthy();
   } finally { await upstream.stop(); }
 });
 
@@ -91,7 +90,7 @@ test('4077 — $important modifier: allowlist over block', async ({ agh, api }) 
   try {
     await setCustomRules(ctxOf(agh, api), [`||${domain}^$important`, `@@||${domain}^$important`]);
     const { answers } = await waitForDnsAnswer(agh, domain, 'A', (a) => a.includes('203.0.113.7'));
-    assert.ok(answers.includes('203.0.113.7'), `Expected @@$important to win, got ${answers}`);
+    expect(answers.includes('203.0.113.7'), `Expected @@$important to win, got ${answers}`).toBeTruthy();
   } finally { await upstream.stop(); }
 });
 
@@ -106,9 +105,9 @@ test('4074 — $denyallow modifier', async ({ agh, api }) => {
     await setDnsConfig(agh.baseUrl, { upstream_dns: [`${UPSTREAM_HOST}:${upstream.getPort()}`] }, api.authHeaders);
     await setCustomRules(ctxOf(agh, api), [`||${comDomain}^`, `||${netDomain}^`, `@@*$denyallow=net`]);
     const { answers: comAnswers } = await waitForDnsAnswer(agh, comDomain, 'A', (a) => a.includes('203.0.113.9'));
-    assert.ok(comAnswers.includes('203.0.113.9'), `Expected ${comDomain} allowed, got ${comAnswers}`);
+    expect(comAnswers.includes('203.0.113.9'), `Expected ${comDomain} allowed, got ${comAnswers}`).toBeTruthy();
     const { answers: netAnswers } = await waitForDnsAnswer(agh, netDomain, 'A', (a) => a.includes('0.0.0.0'));
-    assert.ok(netAnswers.includes('0.0.0.0'), `Expected ${netDomain} blocked, got ${netAnswers}`);
+    expect(netAnswers.includes('0.0.0.0'), `Expected ${netDomain} blocked, got ${netAnswers}`).toBeTruthy();
   } finally { await upstream.stop(); }
 });
 
@@ -128,11 +127,11 @@ test('4073 — $badfilter modifier', async ({ agh, api }) => {
     }, { timeoutMs: 15_000, intervalMs: 500 });
 
     const { answers: blocked } = await waitForDnsAnswer(agh, domain, 'A', (a) => a.includes('0.0.0.0'));
-    assert.ok(blocked.includes('0.0.0.0'), `Precondition: expected ${domain} blocked by blocklist`);
+    expect(blocked.includes('0.0.0.0'), `Precondition: expected ${domain} blocked by blocklist`).toBeTruthy();
 
     await setCustomRules(ctxOf(agh, api), [`||${domain}^$badfilter`]);
     const { answers: unblocked } = await waitForDnsAnswer(agh, domain, 'A', (a) => a.includes('203.0.113.20'));
-    assert.ok(unblocked.includes('203.0.113.20'), `Expected $badfilter to lift block, got ${unblocked}`);
+    expect(unblocked.includes('203.0.113.20'), `Expected $badfilter to lift block, got ${unblocked}`).toBeTruthy();
   } finally { await upstream.stop(); }
 });
 
@@ -146,12 +145,12 @@ test('4082 — CNAME advanced blocking', async ({ agh, api }) => {
   try {
     await setDnsConfig(agh.baseUrl, { upstream_dns: [`${UPSTREAM_HOST}:${upstream.getPort()}`] }, api.authHeaders);
     const { answers: beforeRoot } = await waitForDnsAnswer(agh, rootDomain, 'A', (a) => a.includes('203.0.113.21'));
-    assert.ok(beforeRoot.includes('203.0.113.21'), `Precondition: ${rootDomain} should resolve`);
+    expect(beforeRoot.includes('203.0.113.21'), `Precondition: ${rootDomain} should resolve`).toBeTruthy();
     await setCustomRules(ctxOf(agh, api), [`||${cnameTarget}^`]);
     const { answers: rootBlocked } = await waitForDnsAnswer(agh, rootDomain, 'A', (a) => a.includes('0.0.0.0'));
-    assert.ok(rootBlocked.includes('0.0.0.0'), `Expected ${rootDomain} blocked via CNAME, got ${rootBlocked}`);
+    expect(rootBlocked.includes('0.0.0.0'), `Expected ${rootDomain} blocked via CNAME, got ${rootBlocked}`).toBeTruthy();
     const { answers: targetBlocked } = await waitForDnsAnswer(agh, cnameTarget, 'A', (a) => a.includes('0.0.0.0'));
-    assert.ok(targetBlocked.includes('0.0.0.0'), `Expected ${cnameTarget} direct query blocked, got ${targetBlocked}`);
+    expect(targetBlocked.includes('0.0.0.0'), `Expected ${cnameTarget} direct query blocked, got ${targetBlocked}`).toBeTruthy();
   } finally { await upstream.stop(); }
 });
 
@@ -163,15 +162,15 @@ test('4084 — check_host filtering API', async ({ agh, api }) => {
     url.searchParams.set('name', name);
     if (client) url.searchParams.set('client', client);
     const res = await authed(api)(url.toString());
-    assert.ok(res.ok, `check_host failed: ${res.status}`);
+    expect(res.ok, `check_host failed: ${res.status}`).toBeTruthy();
     return res.json() as Promise<{ reason: string; ip_addrs?: string[] | null }>;
   }
   await addClient(ctx, { name: 'test-4084', ids: ['127.0.0.1'], use_global_settings: true, use_global_blocked_services: true, filtering_enabled: true });
   await setCustomRules(ctx, [`||${domain}^$client=test-4084`]);
-  assert.equal((await checkHost(domain, '127.0.0.1')).reason, 'FilteredBlackList');
-  assert.equal((await checkHost(domain, '10.10.10.10')).reason, 'NotFilteredNotFound');
+  expect((await checkHost(domain, '127.0.0.1')).reason).toBe('FilteredBlackList');
+  expect((await checkHost(domain, '10.10.10.10')).reason).toBe('NotFilteredNotFound');
   await setCustomRules(ctx, [`||${domain}^$client=127.0.0.1/16,dnsrewrite=NOERROR;A;10.0.0.250`]);
-  assert.equal((await checkHost(domain, '127.0.0.1')).reason, 'RewriteRule');
+  expect((await checkHost(domain, '127.0.0.1')).reason).toBe('RewriteRule');
 });
 
 test('4076 — $ctag modifier', async ({ agh, api }) => {
@@ -181,13 +180,13 @@ test('4076 — $ctag modifier', async ({ agh, api }) => {
   try {
     await setCustomRules(ctx, [`||${domain}^$ctag=user_child`]);
     const { answers: before } = await waitForDnsAnswer(agh, domain, 'A', (a) => a.includes('203.0.113.90'));
-    assert.ok(before.includes('203.0.113.90'), `Expected resolve before tagging, got ${before}`);
+    expect(before.includes('203.0.113.90'), `Expected resolve before tagging, got ${before}`).toBeTruthy();
     await addClient(ctx, { name: 'child-client', ids: ['127.0.0.1'], tags: ['user_child'], use_global_settings: true });
     const { answers: after } = await waitForDnsAnswer(agh, domain, 'A', (a, rc) => a.includes('0.0.0.0') || rc === 'NXDOMAIN');
-    assert.ok(after.includes('0.0.0.0') || after.length === 0, `Expected blocked for user_child, got ${after}`);
+    expect(after.includes('0.0.0.0') || after.length === 0, `Expected blocked for user_child, got ${after}`).toBeTruthy();
     await updateClient(ctx, 'child-client', { name: 'child-client', ids: ['127.0.0.1'], tags: ['device_laptop'], use_global_settings: true });
     const { answers: afterRetag } = await waitForDnsAnswer(agh, domain, 'A', (a) => a.includes('203.0.113.90'));
-    assert.ok(afterRetag.includes('203.0.113.90'), `Expected resolve after retag, got ${afterRetag}`);
+    expect(afterRetag.includes('203.0.113.90'), `Expected resolve after retag, got ${afterRetag}`).toBeTruthy();
   } finally { await upstream.stop(); }
 });
 
@@ -195,8 +194,8 @@ test('4204 — IPv4-only rewrite returns NODATA for AAAA', async ({ agh, api }) 
   const domain = 'type-a-only.example';
   await setCustomRules(ctxOf(agh, api), [`||${domain}^$dnsrewrite=NOERROR;A;5.5.5.5`]);
   const { answers } = await waitForDnsAnswer(agh, domain, 'A', (a) => a.includes('5.5.5.5'));
-  assert.ok(answers.includes('5.5.5.5'), `Expected A answer 5.5.5.5, got ${answers}`);
+  expect(answers.includes('5.5.5.5'), `Expected A answer 5.5.5.5, got ${answers}`).toBeTruthy();
   const aaaa = await agh.dnslookup(domain, { type: 'AAAA' });
-  assert.equal(aaaa.status, 'NOERROR', `Expected NOERROR (NODATA) for AAAA, got ${aaaa.status}`);
-  assert.equal(aaaa.records.filter((r) => r.type === 'AAAA').length, 0, `Expected no AAAA answers, got ${JSON.stringify(aaaa.records)}`);
+  expect(aaaa.status, `Expected NOERROR (NODATA) for AAAA, got ${aaaa.status}`).toBe('NOERROR');
+  expect(aaaa.records.filter((r) => r.type === 'AAAA').length, `Expected no AAAA answers, got ${JSON.stringify(aaaa.records)}`).toBe(0);
 });

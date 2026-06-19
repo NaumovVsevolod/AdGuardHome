@@ -1,4 +1,5 @@
 import { test, expect } from '../runtime/fixtures';
+import { authed } from '../shared/api/test-fetch.ts';
 import { clearDnsCache, setDnsConfig, getDnsInfo } from '../shared/dns/dns-settings.ts';
 import { waitFor } from '../shared/polling/retry.ts';
 
@@ -9,11 +10,12 @@ test.describe('DNS Core Configuration Tests (Cases 4102, 4105, 4106)', () => {
   test('4106 — Blocking mode', async ({ agh, api }) => {
     // Ensure valid upstreams, then block the test domain via a custom rule.
     await setDnsConfig(agh.baseUrl, { upstream_dns: ['8.8.8.8', '1.1.1.1'] }, api.authHeaders);
-    await fetch(`${agh.baseUrl}/control/filtering/set_rules`, {
+    const setRulesRes = await authed(api)(`${agh.baseUrl}/control/filtering/set_rules`, {
       method: 'POST',
-      headers: { ...(api.authHeaders as Record<string, string>), 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ rules: [`||${blockedDomain}^`] }),
     });
+    expect(setRulesRes.ok).toBeTruthy();
 
     // 1. Default blocking -> 0.0.0.0
     await setDnsConfig(agh.baseUrl, { blocking_mode: 'default' }, api.authHeaders);

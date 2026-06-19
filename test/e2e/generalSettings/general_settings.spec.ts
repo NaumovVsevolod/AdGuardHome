@@ -1,5 +1,4 @@
-import assert from 'node:assert/strict';
-import { test } from '../runtime/fixtures';
+import { test, expect } from '../runtime/fixtures';
 import { authed, UPSTREAM_HOST, ctxOf } from '../shared/api/test-fetch.ts';
 
 import { waitFor, sleep } from '../shared/polling/retry.ts';
@@ -31,7 +30,7 @@ async function waitForQueryLogRecord(agh: AdGuardContainer, api: AdGuardApiClien
 async function assertQueryLogDoesNotContain(agh: AdGuardContainer, api: AdGuardApiClient, domain: string): Promise<void> {
   await sleep(1_000);
   const response = await getQueryLog(ctxOf(agh, api), { search: domain, limit: 100 });
-  assert.equal(response.data.some((record) => matchesDomain(record, domain)), false, `Expected query log to ignore ${domain}`);
+  expect(response.data.some((record) => matchesDomain(record, domain)), `Expected query log to ignore ${domain}`).toBe(false);
 }
 
 function rankedKeys(items: Array<Record<string, number>>): string[] { return items.flatMap((item) => Object.keys(item)); }
@@ -67,8 +66,8 @@ test('4063/4064/4065/4066 — Query log & statistics enable/ignore', async ({ ag
       const stats = await getStats(ctx);
       return stats.num_dns_queries > 0 && stats.num_blocked_filtering > 0 ? stats : undefined;
     }, { timeoutMs: 10_000, intervalMs: 500 });
-    assert.ok(changedStats.num_dns_queries > 0);
-    assert.ok(changedStats.num_blocked_filtering > 0);
+    expect(changedStats.num_dns_queries > 0).toBeTruthy();
+    expect(changedStats.num_blocked_filtering > 0).toBeTruthy();
 
     await clearQueryLog(ctx);
     await updateQueryLogConfig(ctx, { ...DEFAULT_QUERY_LOG_CONFIG, ignored_enabled: true, ignored: ['youtube.com'] });
@@ -92,32 +91,32 @@ test('4063/4064/4065/4066 — Query log & statistics enable/ignore', async ({ ag
     await queryDomain(agh, 'mail.ru');
     const mailOnlyStats = await waitForStats(agh, api);
     const topQueriedDomains = rankedKeys(mailOnlyStats.top_queried_domains);
-    assert.ok(topQueriedDomains.includes('mail.ru'), 'Expected mail.ru in statistics');
-    assert.equal(topQueriedDomains.includes('youtube.com'), false, 'Expected youtube.com ignored in statistics');
+    expect(topQueriedDomains.includes('mail.ru'), 'Expected mail.ru in statistics').toBeTruthy();
+    expect(topQueriedDomains.includes('youtube.com'), 'Expected youtube.com ignored in statistics').toBe(false);
 
     await clearStats(ctx);
     await updateStatsConfig(ctx, { ...DEFAULT_STATS_CONFIG, ignored_enabled: true, ignored: ['93.184.216.34'] });
     await queryDomain(agh, '93.184.216.34');
     await sleep(1_000);
-    assert.equal((await getStats(ctx)).num_dns_queries, 0, 'Expected ignored IP-like queries skipped in statistics');
+    expect((await getStats(ctx)).num_dns_queries, 'Expected ignored IP-like queries skipped in statistics').toBe(0);
 
     await updateStatsConfig(ctx, DEFAULT_STATS_CONFIG);
     await queryDomain(agh, restoredStatsDomain);
-    assert.ok((await waitForStats(agh, api)).num_dns_queries > 0, 'Expected statistics to resume');
+    expect((await waitForStats(agh, api)).num_dns_queries > 0, 'Expected statistics to resume').toBeTruthy();
 
     await clearStats(ctx);
     await queryDomain(agh, baselineStatsDomain);
-    assert.ok((await waitForStats(agh, api)).num_dns_queries > 0, 'Expected baseline statistics');
+    expect((await waitForStats(agh, api)).num_dns_queries > 0, 'Expected baseline statistics').toBeTruthy();
 
     await updateStatsConfig(ctx, { ...DEFAULT_STATS_CONFIG, enabled: false });
     const beforeDisabled = await getStats(ctx);
     await queryDomain(agh, disabledStatsDomain);
     await sleep(1_000);
-    assert.equal((await getStats(ctx)).num_dns_queries, beforeDisabled.num_dns_queries, 'Expected disabled statistics to stop collecting');
+    expect((await getStats(ctx)).num_dns_queries, 'Expected disabled statistics to stop collecting').toBe(beforeDisabled.num_dns_queries);
 
     await clearStats(ctx);
     const clearedStats = await getStats(ctx);
-    assert.equal(clearedStats.num_dns_queries, 0, 'Expected cleared statistics empty');
-    assert.deepEqual(clearedStats.top_queried_domains, [], 'Expected no top domains after clear');
+    expect(clearedStats.num_dns_queries, 'Expected cleared statistics empty').toBe(0);
+    expect(clearedStats.top_queried_domains, 'Expected no top domains after clear').toEqual([]);
   } finally { await mock.stop(); }
 });

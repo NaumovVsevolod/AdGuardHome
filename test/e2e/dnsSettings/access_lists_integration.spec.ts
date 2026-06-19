@@ -1,5 +1,4 @@
-import assert from 'node:assert/strict';
-import { test } from '../runtime/fixtures';
+import { test, expect } from '../runtime/fixtures';
 import { UPSTREAM_HOST } from '../shared/api/test-fetch.ts';
 
 import { allocateUdpPort, MockDnsServer } from '../shared/dns/mock-dns-server.ts';
@@ -40,7 +39,7 @@ test('4115 — Disallowed domains', async ({ agh, api }) => {
   try {
     await useMockUpstream(agh, api, port);
     const pre = await agh.dnslookup(domain, { type: 'A' });
-    assert.equal(pre.status, 'NOERROR', 'Domain should resolve before blocked_hosts rule');
+    expect(pre.status, 'Domain should resolve before blocked_hosts rule').toBe('NOERROR');
 
     await setAccessList(api, { blocked_hosts: [domain] });
     await waitForPacketDrop(agh, domain, 'A');
@@ -55,7 +54,7 @@ test('4113 — Disallowed clients', async ({ agh, api }) => {
   try {
     await useMockUpstream(agh, api, port);
     const pre = await agh.dnslookup(domain, { type: 'A' });
-    assert.equal(pre.status, 'NOERROR', 'Domain should resolve before disallowed_clients rule');
+    expect(pre.status, 'Domain should resolve before disallowed_clients rule').toBe('NOERROR');
 
     // Queries come from 127.0.0.1 inside the container.
     await setAccessList(api, { disallowed_clients: ['127.0.0.1'] });
@@ -71,7 +70,7 @@ test('4112 — Allowed clients: access list drop', async ({ agh, api }) => {
   try {
     await useMockUpstream(agh, api, port);
     const pre = await agh.dnslookup(domain, { type: 'A' });
-    assert.equal(pre.status, 'NOERROR', 'Domain should resolve before allowed_clients rule');
+    expect(pre.status, 'Domain should resolve before allowed_clients rule').toBe('NOERROR');
 
     await setAccessList(api, { allowed_clients: ['127.0.0.2'] });
     await waitForPacketDrop(agh, domain, 'A');

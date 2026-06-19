@@ -1,6 +1,5 @@
-import assert from 'node:assert/strict';
 import { setTimeout } from 'node:timers/promises';
-import { test } from '../runtime/fixtures';
+import { test, expect } from '../runtime/fixtures';
 import { resolveAnswers as runDnsQuery } from '../shared/dns/dns-test-helpers.ts';
 import { authed, UPSTREAM_HOST } from '../shared/api/test-fetch.ts';
 import { runCustomRuleTestCase, type CustomRuleTestCase } from './customrules.ts';
@@ -20,8 +19,8 @@ function normalizeAnswers(answers: string[]): string[] {
 }
 
 function assertDnsAnswersEqual(actual: string[], expected: string[], description: string): void {
-  assert.deepEqual(normalizeAnswers(actual), normalizeAnswers(expected),
-    `${description}\nExpected: ${JSON.stringify(normalizeAnswers(expected))}\nActual: ${JSON.stringify(normalizeAnswers(actual))}`);
+  expect(normalizeAnswers(actual),
+    `${description}\nExpected: ${JSON.stringify(normalizeAnswers(expected))}\nActual: ${JSON.stringify(normalizeAnswers(actual))}`).toEqual(normalizeAnswers(expected));
 }
 
 async function waitForExpectedDnsAnswers(agh: AdGuardContainer, opts: {
@@ -72,7 +71,7 @@ test('4071 — Custom rule for specific IP', async ({ agh, api }) => {
     const baselineAllowedIpv6 = await runDnsQuery(agh, 'www.example.org', 'AAAA');
     assertDnsAnswersEqual(baselineAllowedIpv6, [BASELINE_ALLOWED_IPV6],
       'Precondition: expected deterministic AAAA answers for www.example.org before custom rules');
-    assert.ok(!baselineAllowedIpv6.includes('::'), `Precondition: expected real AAAA answers, got ${JSON.stringify(baselineAllowedIpv6)}`);
+    expect(!baselineAllowedIpv6.includes('::'), `Precondition: expected real AAAA answers, got ${JSON.stringify(baselineAllowedIpv6)}`).toBeTruthy();
 
     const rule1 = "||example.org^$client='127.0.0.1'";
     const rule2 = "||www.example.org^$client='127.0.0.1'";

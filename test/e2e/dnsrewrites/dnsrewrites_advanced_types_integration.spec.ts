@@ -1,5 +1,4 @@
-import assert from 'node:assert/strict';
-import { test } from '../runtime/fixtures';
+import { test, expect } from '../runtime/fixtures';
 import { authed, UPSTREAM_HOST } from '../shared/api/test-fetch.ts';
 
 import { addRewrite, deleteRewrite, updateRewriteSettings, type DnsRewrite } from './dnsrewrites.ts';
@@ -25,8 +24,8 @@ test('4160 — Advanced DNS rewrites (wildcard): advanced-types spec', async ({ 
       return r.status === 'NOERROR' && r.answers.length > 0 ? r : undefined;
     }, { timeoutMs: 10_000, intervalMs: 500 });
     const aAnswer = records.find((a) => a.type === 'A');
-    assert.ok(aAnswer, `Expected A answer for ${name}`);
-    assert.equal(aAnswer.data, '10.99.0.1', `Expected 10.99.0.1 for ${name}, got ${aAnswer.data}`);
+    expect(aAnswer, `Expected A answer for ${name}`).toBeTruthy();
+    expect(aAnswer.data, `Expected 10.99.0.1 for ${name}, got ${aAnswer.data}`).toBe('10.99.0.1');
   }
 
   await deleteRewrite(agh.baseUrl, wildcard, authed(api));

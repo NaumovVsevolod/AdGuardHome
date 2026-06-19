@@ -1,4 +1,3 @@
-import assert from 'node:assert/strict';
 import { type Page } from '@playwright/test';
 
 import { test, expect } from '../runtime/fixtures';
@@ -70,7 +69,7 @@ test('4131 — Client request count', async ({ page, agh, api }) => {
 
   await expect(page).toHaveURL(/#logs/);
   const searchValue = stripWrappedQuotes(await queryLogSearchInput(page).inputValue());
-  assert.ok(searchValue === clientName || searchValue === CLIENT_IP,
-    `Expected Query Log filtered by ${clientName} or ${CLIENT_IP}, got ${searchValue}`);
+  expect(searchValue === clientName || searchValue === CLIENT_IP,
+    `Expected Query Log filtered by ${clientName} or ${CLIENT_IP}, got ${searchValue}`).toBeTruthy();
   for (const domain of queriedDomains) await expect(page.locator('body')).toContainText(domain);
 });

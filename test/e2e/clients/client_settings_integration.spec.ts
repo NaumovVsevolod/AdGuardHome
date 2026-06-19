@@ -1,5 +1,4 @@
-import assert from 'node:assert/strict';
-import { test } from '../runtime/fixtures';
+import { test, expect } from '../runtime/fixtures';
 import { authed, UPSTREAM_HOST, ctxOf } from '../shared/api/test-fetch.ts';
 
 import { waitFor } from '../shared/polling/retry.ts';
@@ -30,8 +29,8 @@ test('4132 — Client name in query log', async ({ agh, api }) => {
       return log.data.find((e) => (e.question?.name ?? e.question?.host ?? '') === domain);
     }, { timeoutMs: 10_000, intervalMs: 300 });
 
-    assert.ok(entry !== undefined, `Expected querylog entry for ${domain}`);
-    assert.equal(entry.client_info?.name, clientName, `Expected client_info.name '${clientName}', got '${entry.client_info?.name}'`);
+    expect(entry !== undefined, `Expected querylog entry for ${domain}`).toBeTruthy();
+    expect(entry.client_info?.name, `Expected client_info.name '${clientName}', got '${entry.client_info?.name}'`).toBe(clientName);
   } finally { await upstream.stop(); }
 });
 
@@ -48,6 +47,6 @@ test('4141 — Per-client upstream DNS', async ({ agh, api }) => {
 
     await addClient(ctx, { name: 'custom-upstream-client', ids: ['127.0.0.1'], use_global_settings: true, upstreams: [`${UPSTREAM_HOST}:${clientUpstream.getPort()}`] });
     const { answers } = await waitForDnsAnswer(agh, domain, 'A', (a) => a.includes(CLIENT_IP));
-    assert.ok(answers.includes(CLIENT_IP), `Expected per-client upstream answer ${CLIENT_IP}, got ${answers}`);
+    expect(answers.includes(CLIENT_IP), `Expected per-client upstream answer ${CLIENT_IP}, got ${answers}`).toBeTruthy();
   } finally { await globalUpstream.stop(); await clientUpstream.stop(); }
 });

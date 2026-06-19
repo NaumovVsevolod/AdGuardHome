@@ -1,5 +1,4 @@
-import assert from 'node:assert/strict';
-import { test } from '../runtime/fixtures';
+import { test, expect } from '../runtime/fixtures';
 import { resolveAnswers } from '../shared/dns/dns-test-helpers.ts';
 import { authed, UPSTREAM_HOST } from '../shared/api/test-fetch.ts';
 
@@ -33,13 +32,13 @@ test('4072 — Custom rule for specific client', async ({ agh, api }) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: 'named-client', ids: ['127.0.0.1'], use_global_settings: true }),
     });
-    assert.equal(addClientRes.ok, true, `Failed to add test client: ${addClientRes.status} ${await addClientRes.text()}`);
+    expect(addClientRes.ok, `Failed to add test client: ${addClientRes.status} ${await addClientRes.text()}`).toBe(true);
 
     await clearQueryLog(api);
 
     const baselineAnswers = await resolveAnswers(agh, 'example.org', 'A');
-    assert.ok(baselineAnswers.length > 0 && !baselineAnswers.includes('0.0.0.0'),
-      `Precondition failed: expected real answers for example.org, got ${JSON.stringify(baselineAnswers)}`);
+    expect(baselineAnswers.length > 0 && !baselineAnswers.includes('0.0.0.0'),
+      `Precondition failed: expected real answers for example.org, got ${JSON.stringify(baselineAnswers)}`).toBeTruthy();
 
     await runCustomRuleTestCase({
       name: 'Block example.org for a persistent client identified by name',

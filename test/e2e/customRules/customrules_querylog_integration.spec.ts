@@ -1,5 +1,4 @@
-import assert from 'node:assert/strict';
-import { test } from '../runtime/fixtures';
+import { test, expect } from '../runtime/fixtures';
 import { authed } from '../shared/api/test-fetch.ts';
 
 import { setCustomRules } from '../shared/adguard/filtering.ts';
@@ -13,10 +12,10 @@ test('4075 — $dnsrewrite modifier: original_answer in query log', async ({ agh
   try {
     await setCustomRules({ baseUrl: agh.baseUrl, fetchImpl: authed(api) }, [`||${domain}^$dnsrewrite=${REWRITTEN_IP}`]);
     const { answers } = await agh.dnslookup(domain, { type: 'A' });
-    assert.ok(answers.includes(REWRITTEN_IP), `Expected rewritten IP ${REWRITTEN_IP}, got ${answers}`);
+    expect(answers.includes(REWRITTEN_IP), `Expected rewritten IP ${REWRITTEN_IP}, got ${answers}`).toBeTruthy();
 
     const entry = await waitForQueryLogRecord(agh.baseUrl, domain, { fetchImpl: authed(api), timeoutMs: 15_000 });
-    assert.ok((entry.answer ?? []).some((a) => a.value === REWRITTEN_IP),
-      `Expected querylog answer to contain ${REWRITTEN_IP}, got ${JSON.stringify(entry.answer)}`);
+    expect((entry.answer ?? []).some((a) => a.value === REWRITTEN_IP),
+      `Expected querylog answer to contain ${REWRITTEN_IP}, got ${JSON.stringify(entry.answer)}`).toBeTruthy();
   } finally { await upstream.stop(); }
 });

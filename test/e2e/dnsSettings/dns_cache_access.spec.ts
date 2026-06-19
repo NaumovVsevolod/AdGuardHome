@@ -1,5 +1,4 @@
-import assert from 'node:assert';
-import { test } from '../runtime/fixtures';
+import { test, expect } from '../runtime/fixtures';
 import { setDnsConfig, setAccessConfig, getDnsInfo } from '../shared/dns/dns-settings.ts';
 
 test.describe('DNS Cache & Access Tests (Cases 4108, 4109, 4110, 4112)', () => {
@@ -17,17 +16,17 @@ test.describe('DNS Cache & Access Tests (Cases 4108, 4109, 4110, 4112)', () => {
     // AGH drops queries from disallowed clients (no response), so a blocked
     // query surfaces as a timeout rather than a clean answer.
     const refused = await agh.dnslookup('example.com', { type: 'A', timeoutSec: 3 });
-    assert.notEqual(refused.status, 'NOERROR', 'Should block the in-container client when only 1.2.3.4 is allowed');
+    expect(refused.status, 'Should block the in-container client when only 1.2.3.4 is allowed').not.toBe('NOERROR');
 
     // 2. Reset (allow all)
     await setAccessConfig(agh.baseUrl, { allowed_clients: [] }, api.authHeaders);
     const allowed = await agh.dnslookup('example.com', { type: 'A' });
-    assert.equal(allowed.status, 'NOERROR', 'Should allow the in-container client again');
+    expect(allowed.status, 'Should allow the in-container client again').toBe('NOERROR');
 
     // 3. Disallow localhost
     await setAccessConfig(agh.baseUrl, { disallowed_clients: ['127.0.0.1'] }, api.authHeaders);
     const blocked = await agh.dnslookup('example.com', { type: 'A', timeoutSec: 3 });
-    assert.notEqual(blocked.status, 'NOERROR', 'Should block the in-container client when 127.0.0.1 is disallowed');
+    expect(blocked.status, 'Should block the in-container client when 127.0.0.1 is disallowed').not.toBe('NOERROR');
 
     await setAccessConfig(agh.baseUrl, { disallowed_clients: [] }, api.authHeaders);
   });

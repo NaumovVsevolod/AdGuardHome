@@ -1,5 +1,4 @@
-import assert from 'node:assert/strict';
-import { test } from '../runtime/fixtures';
+import { test, expect } from '../runtime/fixtures';
 import { authed, UPSTREAM_HOST } from '../shared/api/test-fetch.ts';
 
 import { addRewrite, deleteRewrite, updateRewrite, updateRewriteSettings, type DnsRewrite } from './dnsrewrites.ts';
@@ -37,14 +36,14 @@ test('10023 — Enable/disable a rewrite rule', async ({ agh, api }) => {
     await addRewrite(agh.baseUrl, rewriteV4, authed(api));
     await addRewrite(agh.baseUrl, rewriteV6, authed(api));
 
-    assert.ok((await waitForExactAnswer(agh, 'vk.com', 'A', '127.0.0.1')).includes('127.0.0.1'));
-    assert.ok((await waitForExactAnswer(agh, 'ya.ru', 'AAAA', '::1')).includes('::1'));
+    expect((await waitForExactAnswer(agh, 'vk.com', 'A', '127.0.0.1')).includes('127.0.0.1')).toBeTruthy();
+    expect((await waitForExactAnswer(agh, 'ya.ru', 'AAAA', '::1')).includes('::1')).toBeTruthy();
 
     await updateRewrite(agh.baseUrl, rewriteV4, { ...rewriteV4, enabled: false }, authed(api));
     await updateRewrite(agh.baseUrl, rewriteV6, { ...rewriteV6, enabled: false }, authed(api));
 
-    assert.equal((await waitForDifferentAnswer(agh, 'vk.com', 'A', '127.0.0.1')).includes('127.0.0.1'), false);
-    assert.equal((await waitForDifferentAnswer(agh, 'ya.ru', 'AAAA', '::1')).includes('::1'), false);
+    expect((await waitForDifferentAnswer(agh, 'vk.com', 'A', '127.0.0.1')).includes('127.0.0.1')).toBe(false);
+    expect((await waitForDifferentAnswer(agh, 'ya.ru', 'AAAA', '::1')).includes('::1')).toBe(false);
   } finally { await upstream.stop(); }
 });
 
@@ -56,9 +55,9 @@ test('4159/4178 — Add and remove DNS rewrite', async ({ agh, api }) => {
     const rewrite: DnsRewrite = { domain: 'rewrite-add-del.example', answer: REWRITE_IP, enabled: true };
     await updateRewriteSettings(agh.baseUrl, { enabled: true }, authed(api));
     await addRewrite(agh.baseUrl, rewrite, authed(api));
-    assert.ok((await waitForExactAnswer(agh, 'rewrite-add-del.example', 'A', REWRITE_IP)).includes(REWRITE_IP));
+    expect((await waitForExactAnswer(agh, 'rewrite-add-del.example', 'A', REWRITE_IP)).includes(REWRITE_IP)).toBeTruthy();
     await deleteRewrite(agh.baseUrl, rewrite, authed(api));
-    assert.ok((await waitForExactAnswer(agh, 'rewrite-add-del.example', 'A', REAL_IP)).includes(REAL_IP));
+    expect((await waitForExactAnswer(agh, 'rewrite-add-del.example', 'A', REAL_IP)).includes(REAL_IP)).toBeTruthy();
   } finally { await upstream.stop(); }
 });
 
@@ -70,14 +69,14 @@ test('10021 — Enable/disable DNS rewrites', async ({ agh, api }) => {
     const rewrite: DnsRewrite = { domain: 'global-toggle.example', answer: REWRITE_IP, enabled: true };
     await updateRewriteSettings(agh.baseUrl, { enabled: true }, authed(api));
     await addRewrite(agh.baseUrl, rewrite, authed(api));
-    assert.ok((await waitForExactAnswer(agh, 'global-toggle.example', 'A', REWRITE_IP)).includes(REWRITE_IP));
+    expect((await waitForExactAnswer(agh, 'global-toggle.example', 'A', REWRITE_IP)).includes(REWRITE_IP)).toBeTruthy();
 
     await updateRewriteSettings(agh.baseUrl, { enabled: false }, authed(api));
     const off = await waitForDifferentAnswer(agh, 'global-toggle.example', 'A', REWRITE_IP);
-    assert.ok(!off.includes(REWRITE_IP) && off.includes(REAL_IP));
+    expect(!off.includes(REWRITE_IP) && off.includes(REAL_IP)).toBeTruthy();
 
     await updateRewriteSettings(agh.baseUrl, { enabled: true }, authed(api));
-    assert.ok((await waitForExactAnswer(agh, 'global-toggle.example', 'A', REWRITE_IP)).includes(REWRITE_IP));
+    expect((await waitForExactAnswer(agh, 'global-toggle.example', 'A', REWRITE_IP)).includes(REWRITE_IP)).toBeTruthy();
   } finally { await upstream.stop(); }
 });
 
@@ -90,8 +89,8 @@ test('4160/4179 — Advanced DNS rewrites (wildcard): integration spec', async (
   try {
     await updateRewriteSettings(agh.baseUrl, { enabled: true }, authed(api));
     await addRewrite(agh.baseUrl, { domain: '*.wildcard.example', answer: REWRITE_IP, enabled: true }, authed(api));
-    assert.ok((await waitForExactAnswer(agh, 'sub.wildcard.example', 'A', REWRITE_IP)).includes(REWRITE_IP));
-    assert.ok((await waitForExactAnswer(agh, 'other.wildcard.example', 'A', REWRITE_IP)).includes(REWRITE_IP));
+    expect((await waitForExactAnswer(agh, 'sub.wildcard.example', 'A', REWRITE_IP)).includes(REWRITE_IP)).toBeTruthy();
+    expect((await waitForExactAnswer(agh, 'other.wildcard.example', 'A', REWRITE_IP)).includes(REWRITE_IP)).toBeTruthy();
   } finally { await upstream.stop(); }
 });
 
@@ -103,9 +102,9 @@ test('4177 — Edit DNS rewrite: change resolved IP', async ({ agh, api }) => {
     const original: DnsRewrite = { domain: 'edit-rewrite.example', answer: ORIGINAL_IP, enabled: true };
     await updateRewriteSettings(agh.baseUrl, { enabled: true }, authed(api));
     await addRewrite(agh.baseUrl, original, authed(api));
-    assert.ok((await waitForExactAnswer(agh, 'edit-rewrite.example', 'A', ORIGINAL_IP)).includes(ORIGINAL_IP));
+    expect((await waitForExactAnswer(agh, 'edit-rewrite.example', 'A', ORIGINAL_IP)).includes(ORIGINAL_IP)).toBeTruthy();
     await updateRewrite(agh.baseUrl, original, { domain: 'edit-rewrite.example', answer: UPDATED_IP, enabled: true }, authed(api));
-    assert.ok((await waitForExactAnswer(agh, 'edit-rewrite.example', 'A', UPDATED_IP)).includes(UPDATED_IP));
+    expect((await waitForExactAnswer(agh, 'edit-rewrite.example', 'A', UPDATED_IP)).includes(UPDATED_IP)).toBeTruthy();
   } finally { await upstream.stop(); }
 });
 
@@ -121,7 +120,7 @@ test('4181 — IPv4-mapped IPv6 rewrite', async ({ agh, api }) => {
       const { answers: a } = await agh.dnslookup('ipv4map.example', { type: 'AAAA' });
       return a.some((v) => FORMS.includes(v)) ? a : undefined;
     }, { timeoutMs: 15_000, intervalMs: 500 });
-    assert.ok(answers.some((v) => FORMS.includes(v)), `Expected an IPv4-mapped AAAA answer, got ${answers}`);
+    expect(answers.some((v) => FORMS.includes(v)), `Expected an IPv4-mapped AAAA answer, got ${answers}`).toBeTruthy();
   } finally { await upstream.stop(); }
 });
 
@@ -131,12 +130,12 @@ test('4159 — DNS rewrite override: priority over blocking rule', async ({ agh,
   const upstream = await useMock(agh, api, [{ domain: 'override-filter.example', type: 'A', data: REAL_IP }]);
   try {
     await setCustomRules({ baseUrl: agh.baseUrl, fetchImpl: authed(api) }, ['||override-filter.example^']);
-    assert.ok((await waitForExactAnswer(agh, 'override-filter.example', 'A', '0.0.0.0')).includes('0.0.0.0'));
+    expect((await waitForExactAnswer(agh, 'override-filter.example', 'A', '0.0.0.0')).includes('0.0.0.0')).toBeTruthy();
 
     await updateRewriteSettings(agh.baseUrl, { enabled: true }, authed(api));
     await addRewrite(agh.baseUrl, { domain: 'override-filter.example', answer: REWRITE_IP, enabled: true }, authed(api));
     const after = await waitForExactAnswer(agh, 'override-filter.example', 'A', REWRITE_IP);
-    assert.ok(after.includes(REWRITE_IP) && !after.includes(REAL_IP));
+    expect(after.includes(REWRITE_IP) && !after.includes(REAL_IP)).toBeTruthy();
   } finally { await upstream.stop(); }
 });
 
@@ -147,8 +146,8 @@ test('4177/10025 — Edit DNS rewrite to blocking', async ({ agh, api }) => {
     const original: DnsRewrite = { domain: 'block-via-edit.example', answer: ORIGINAL_IP, enabled: true };
     await updateRewriteSettings(agh.baseUrl, { enabled: true }, authed(api));
     await addRewrite(agh.baseUrl, original, authed(api));
-    assert.ok((await waitForExactAnswer(agh, 'block-via-edit.example', 'A', ORIGINAL_IP)).includes(ORIGINAL_IP));
+    expect((await waitForExactAnswer(agh, 'block-via-edit.example', 'A', ORIGINAL_IP)).includes(ORIGINAL_IP)).toBeTruthy();
     await updateRewrite(agh.baseUrl, original, { domain: 'block-via-edit.example', answer: '0.0.0.0', enabled: true }, authed(api));
-    assert.ok((await waitForExactAnswer(agh, 'block-via-edit.example', 'A', '0.0.0.0')).includes('0.0.0.0'));
+    expect((await waitForExactAnswer(agh, 'block-via-edit.example', 'A', '0.0.0.0')).includes('0.0.0.0')).toBeTruthy();
   } finally { await upstream.stop(); }
 });

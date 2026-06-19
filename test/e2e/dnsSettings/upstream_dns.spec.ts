@@ -1,6 +1,5 @@
-import assert from 'node:assert/strict';
 import { setTimeout } from 'node:timers/promises';
-import { test } from '../runtime/fixtures';
+import { test, expect } from '../runtime/fixtures';
 import { authed } from '../shared/api/test-fetch.ts';
 import { setUpstreamDNS, checkQueryLog, getUpstreamDNS } from './upstream_dns.ts';
 import type { AdGuardContainer } from '../runtime/adguard-container';
@@ -27,18 +26,18 @@ async function assertSavedUpstreamDns(
   expectedMode?: string,
 ): Promise<void> {
   const dnsInfo = await getUpstreamDNS(authed(api), agh.baseUrl);
-  assert.deepEqual(dnsInfo.upstream_dns, expectedUpstreams,
-    `Saved upstream DNS does not match. Expected ${JSON.stringify(expectedUpstreams)}, got ${JSON.stringify(dnsInfo.upstream_dns)}`);
+  expect(dnsInfo.upstream_dns,
+    `Saved upstream DNS does not match. Expected ${JSON.stringify(expectedUpstreams)}, got ${JSON.stringify(dnsInfo.upstream_dns)}`).toEqual(expectedUpstreams);
   if (expectedMode) {
-    assert.equal(dnsInfo.upstream_mode || 'load_balance', expectedMode);
+    expect(dnsInfo.upstream_mode || 'load_balance').toBe(expectedMode);
   }
 }
 
 test('4085 — Upstream DNS servers: plain DNS & defaults', async ({ agh, api }) => {
   const initialConfig = await getUpstreamDNS(authed(api), agh.baseUrl);
-  assert.equal(initialConfig.upstream_mode || 'load_balance', 'load_balance', 'Default upstream mode should be load_balance');
-  assert.ok(initialConfig.upstream_dns.includes(DEFAULT_UPSTREAM),
-    `Default upstream DNS should include ${DEFAULT_UPSTREAM}, got ${JSON.stringify(initialConfig.upstream_dns)}`);
+  expect(initialConfig.upstream_mode || 'load_balance', 'Default upstream mode should be load_balance').toBe('load_balance');
+  expect(initialConfig.upstream_dns.includes(DEFAULT_UPSTREAM),
+    `Default upstream DNS should include ${DEFAULT_UPSTREAM}, got ${JSON.stringify(initialConfig.upstream_dns)}`).toBeTruthy();
 
   const upstream = '94.140.14.140';
   await setUpstreamDNS(authed(api), agh.baseUrl, { upstream_dns: [upstream] });

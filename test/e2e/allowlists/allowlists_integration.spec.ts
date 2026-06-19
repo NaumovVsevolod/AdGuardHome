@@ -1,5 +1,4 @@
-import assert from 'node:assert/strict';
-import { test } from '../runtime/fixtures';
+import { test, expect } from '../runtime/fixtures';
 import { authed } from '../shared/api/test-fetch.ts';
 
 import { addBlockList, removeBlockList, updateBlockList, type BlockList } from '../blocklists/blocklists.ts';
@@ -30,13 +29,13 @@ test('4175 — Allowlist overrides blocklist', async ({ agh, api }) => {
 
     for (const domain of domains) {
       const answers = await waitForResolution(agh, domain, (v) => v.length > 0 && !v.includes('0.0.0.0'));
-      assert.ok(answers.some((v) => v !== '0.0.0.0'), `Expected ${domain} reachable while allowlist enabled`);
+      expect(answers.some((v) => v !== '0.0.0.0'), `Expected ${domain} reachable while allowlist enabled`).toBeTruthy();
     }
 
     await updateBlockList(agh.baseUrl, allowlist, { ...allowlist, enabled: false }, authed(api));
     for (const domain of domains) {
       const answers = await waitForResolution(agh, domain, (v) => v.includes('0.0.0.0'));
-      assert.ok(answers.includes('0.0.0.0'), `Expected ${domain} blocked after disabling allowlist`);
+      expect(answers.includes('0.0.0.0'), `Expected ${domain} blocked after disabling allowlist`).toBeTruthy();
     }
   } finally { await upstream.stop(); }
 });
@@ -53,10 +52,10 @@ test('4170/4172 — Add and remove allowlist', async ({ agh, api }) => {
 
     await addBlockList(agh.baseUrl, blocklist, authed(api));
     await addBlockList(agh.baseUrl, allowlist, authed(api));
-    assert.ok(!(await waitForResolution(agh, domain, (a) => a.length > 0 && !a.includes('0.0.0.0'))).includes('0.0.0.0'));
+    expect(!(await waitForResolution(agh, domain, (a) => a.length > 0 && !a.includes('0.0.0.0'))).includes('0.0.0.0')).toBeTruthy();
 
     await removeBlockList(agh.baseUrl, allowlist, authed(api));
-    assert.ok((await waitForResolution(agh, domain, (a) => a.includes('0.0.0.0'))).includes('0.0.0.0'));
+    expect((await waitForResolution(agh, domain, (a) => a.includes('0.0.0.0'))).includes('0.0.0.0')).toBeTruthy();
   } finally { await upstream.stop(); }
 });
 
@@ -67,6 +66,6 @@ test('4174 — Add allowlist with duplicate URL', async ({ agh, api }) => {
     const allowlistUrl = await agh.serveRules('dup-allowlist.txt', `@@||${domain}^\n`);
     const allowlist: BlockList = { name: 'Dup Allowlist', url: allowlistUrl, whitelist: true };
     await addBlockList(agh.baseUrl, allowlist, authed(api));
-    await assert.rejects(() => addBlockList(agh.baseUrl, allowlist, authed(api)), /Failed to add blocklist: 400/);
+    await expect(() => addBlockList(agh.baseUrl, allowlist, authed(api))).rejects.toThrow(/Failed to add blocklist: 400/);
   } finally { await upstream.stop(); }
 });

@@ -1,5 +1,4 @@
-import assert from 'node:assert/strict';
-import { test } from '../runtime/fixtures';
+import { test, expect } from '../runtime/fixtures';
 import { authed } from '../shared/api/test-fetch.ts';
 
 import { addBlockList, removeBlockList, updateBlockList, type BlockList } from './blocklists.ts';
@@ -13,7 +12,7 @@ interface FilteringListEntry { url: string; name: string; rules_count?: number; 
 
 async function getFilteringStatus(agh: AdGuardContainer, api: AdGuardApiClient): Promise<{ filters?: FilteringListEntry[] }> {
   const response = await authed(api)(`${agh.baseUrl}/control/filtering/status`);
-  assert.equal(response.ok, true, 'Expected filtering status request to succeed');
+  expect(response.ok, 'Expected filtering status request to succeed').toBe(true);
   return response.json() as Promise<{ filters?: FilteringListEntry[] }>;
 }
 
@@ -30,7 +29,7 @@ async function refreshFilters(agh: AdGuardContainer, api: AdGuardApiClient): Pro
   const response = await authed(api)(`${agh.baseUrl}/control/filtering/refresh`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}),
   });
-  assert.equal(response.ok, true, 'Expected filter refresh request to succeed');
+  expect(response.ok, 'Expected filter refresh request to succeed').toBe(true);
   const body = await response.json() as { updated?: unknown };
   return (typeof body.updated === 'number' ? body.updated : 0);
 }
@@ -49,11 +48,11 @@ test('4164 — Add custom blocklist', async ({ agh, api }) => {
   await addBlockList(agh.baseUrl, blocklist, authed(api));
 
   const storedFilter = await waitForFilter(agh, api, (f) => isLoadedBlocklistFilter(f, blocklist.url));
-  assert.equal(storedFilter.name, blocklist.name);
-  assert.ok((storedFilter.rules_count ?? 0) >= 1, 'Expected custom blocklist to load at least one rule');
+  expect(storedFilter.name).toBe(blocklist.name);
+  expect((storedFilter.rules_count ?? 0) >= 1, 'Expected custom blocklist to load at least one rule').toBeTruthy();
 
   const answers = await waitForBlockedAnswer(agh, 'blocked-custom.example');
-  assert.ok(answers.includes('0.0.0.0'), `Expected blocked-custom.example blocked, got ${JSON.stringify(answers)}`);
+  expect(answers.includes('0.0.0.0'), `Expected blocked-custom.example blocked, got ${JSON.stringify(answers)}`).toBeTruthy();
 });
 
 test('4165 — Add filter without a name', async ({ agh, api }) => {
@@ -62,10 +61,10 @@ test('4165 — Add filter without a name', async ({ agh, api }) => {
   await addBlockList(agh.baseUrl, blocklist, authed(api));
 
   const storedFilter = await waitForFilter(agh, api, (f) => isLoadedBlocklistFilter(f, blocklist.url));
-  assert.equal(storedFilter.name, 'Auto Named Filter');
+  expect(storedFilter.name).toBe('Auto Named Filter');
 
   const answers = await waitForBlockedAnswer(agh, 'auto-named-blocked.example');
-  assert.ok(answers.includes('0.0.0.0'), `Expected auto-named-blocked.example blocked, got ${JSON.stringify(answers)}`);
+  expect(answers.includes('0.0.0.0'), `Expected auto-named-blocked.example blocked, got ${JSON.stringify(answers)}`).toBeTruthy();
 });
 
 test('4078/4161 — Remove blocklist', async ({ agh, api }) => {
@@ -76,10 +75,10 @@ test('4078/4161 — Remove blocklist', async ({ agh, api }) => {
     const blocklist: BlockList = { name: 'Remove Test Blocklist', url, whitelist: false };
     await addBlockList(agh.baseUrl, blocklist, authed(api));
     await waitForFilter(agh, api, (f) => isLoadedBlocklistFilter(f, blocklist.url));
-    assert.ok((await waitForBlockedAnswer(agh, 'remove-blocklist.example')).includes('0.0.0.0'));
+    expect((await waitForBlockedAnswer(agh, 'remove-blocklist.example')).includes('0.0.0.0')).toBeTruthy();
 
     await removeBlockList(agh.baseUrl, blocklist, authed(api));
-    assert.ok((await waitForResolvedAnswer(agh, 'remove-blocklist.example', REAL_IP)).includes(REAL_IP));
+    expect((await waitForResolvedAnswer(agh, 'remove-blocklist.example', REAL_IP)).includes(REAL_IP)).toBeTruthy();
   } finally { await upstream.stop(); }
 });
 
@@ -90,7 +89,7 @@ test('4166 — Add blocklist with duplicate URL', async ({ agh, api }) => {
     const blocklist: BlockList = { name: 'Dup Blocklist', url, whitelist: false };
     await addBlockList(agh.baseUrl, blocklist, authed(api));
     await waitForFilter(agh, api, (f) => isLoadedBlocklistFilter(f, blocklist.url));
-    await assert.rejects(() => addBlockList(agh.baseUrl, blocklist, authed(api)), /Failed to add blocklist: 400/);
+    await expect(() => addBlockList(agh.baseUrl, blocklist, authed(api))).rejects.toThrow(/Failed to add blocklist: 400/);
   } finally { await upstream.stop(); }
 });
 
@@ -110,17 +109,17 @@ test('4167 — DNS blocklists general', async ({ agh, api }) => {
     await waitForFilter(agh, api, (f) => isLoadedBlocklistFilter(f, first.url));
     await waitForFilter(agh, api, (f) => isLoadedBlocklistFilter(f, second.url));
 
-    assert.ok((await waitForBlockedAnswer(agh, firstDomain)).includes('0.0.0.0'));
-    assert.ok((await waitForBlockedAnswer(agh, secondDomain)).includes('0.0.0.0'));
+    expect((await waitForBlockedAnswer(agh, firstDomain)).includes('0.0.0.0')).toBeTruthy();
+    expect((await waitForBlockedAnswer(agh, secondDomain)).includes('0.0.0.0')).toBeTruthy();
 
-    assert.ok((await refreshFilters(agh, api)) >= 0);
-    assert.ok((await waitForBlockedAnswer(agh, firstDomain)).includes('0.0.0.0'));
-    assert.ok((await waitForBlockedAnswer(agh, secondDomain)).includes('0.0.0.0'));
+    expect((await refreshFilters(agh, api)) >= 0).toBeTruthy();
+    expect((await waitForBlockedAnswer(agh, firstDomain)).includes('0.0.0.0')).toBeTruthy();
+    expect((await waitForBlockedAnswer(agh, secondDomain)).includes('0.0.0.0')).toBeTruthy();
 
     await updateBlockList(agh.baseUrl, first, { ...first, enabled: false }, authed(api));
     await updateBlockList(agh.baseUrl, second, { ...second, enabled: false }, authed(api));
-    assert.ok((await waitForResolvedAnswer(agh, firstDomain, REAL_IP)).includes(REAL_IP));
-    assert.ok((await waitForResolvedAnswer(agh, secondDomain, REAL_IP)).includes(REAL_IP));
+    expect((await waitForResolvedAnswer(agh, firstDomain, REAL_IP)).includes(REAL_IP)).toBeTruthy();
+    expect((await waitForResolvedAnswer(agh, secondDomain, REAL_IP)).includes(REAL_IP)).toBeTruthy();
   } finally { await upstream.stop(); }
 });
 
@@ -132,15 +131,15 @@ test('4168 — Blocklist updates: no-op refresh timestamp', async ({ agh, api })
     const blocklist: BlockList = { name: 'Stable Blocklist', url, whitelist: false };
     await addBlockList(agh.baseUrl, blocklist, authed(api));
     const initialFilter = await waitForFilter(agh, api, (f) => isLoadedBlocklistFilter(f, blocklist.url) && typeof f.last_updated === 'string');
-    assert.ok(initialFilter.last_updated);
+    expect(initialFilter.last_updated).toBeTruthy();
 
     await new Promise((r) => setTimeout(r, 1_100));
-    assert.equal(await refreshFilters(agh, api), 0, 'Expected no updated filters when remote rules are unchanged');
+    expect(await refreshFilters(agh, api), 'Expected no updated filters when remote rules are unchanged').toBe(0);
 
     const refreshedFilter = await waitForFilter(agh, api, (f) => f.url === blocklist.url && typeof f.last_updated === 'string');
-    assert.ok(refreshedFilter.last_updated);
-    assert.ok(Date.parse(refreshedFilter.last_updated!) > Date.parse(initialFilter.last_updated!),
-      `Expected last_updated to move forward, got ${initialFilter.last_updated} -> ${refreshedFilter.last_updated}`);
+    expect(refreshedFilter.last_updated).toBeTruthy();
+    expect(Date.parse(refreshedFilter.last_updated!) > Date.parse(initialFilter.last_updated!),
+      `Expected last_updated to move forward, got ${initialFilter.last_updated} -> ${refreshedFilter.last_updated}`).toBeTruthy();
   } finally { await upstream.stop(); }
 });
 
@@ -156,14 +155,14 @@ test('4168 — Blocklist updates: apply updated rules', async ({ agh, api }) => 
     await addBlockList(agh.baseUrl, blocklist, authed(api));
     await waitForFilter(agh, api, (f) => isLoadedBlocklistFilter(f, blocklist.url));
 
-    assert.ok((await waitForBlockedAnswer(agh, oldDomain)).includes('0.0.0.0'));
-    assert.ok((await waitForResolvedAnswer(agh, newDomain, REAL_IP)).includes(REAL_IP));
+    expect((await waitForBlockedAnswer(agh, oldDomain)).includes('0.0.0.0')).toBeTruthy();
+    expect((await waitForResolvedAnswer(agh, newDomain, REAL_IP)).includes(REAL_IP)).toBeTruthy();
 
     // Update the served content, then refresh.
     await agh.serveRules('refreshable-blocklist.txt', `||${newDomain}^\n`);
-    assert.ok((await refreshFilters(agh, api)) >= 1, 'Expected at least one updated filter');
+    expect((await refreshFilters(agh, api)) >= 1, 'Expected at least one updated filter').toBeTruthy();
 
-    assert.ok((await waitForResolvedAnswer(agh, oldDomain, REAL_IP)).includes(REAL_IP));
-    assert.ok((await waitForBlockedAnswer(agh, newDomain)).includes('0.0.0.0'));
+    expect((await waitForResolvedAnswer(agh, oldDomain, REAL_IP)).includes(REAL_IP)).toBeTruthy();
+    expect((await waitForBlockedAnswer(agh, newDomain)).includes('0.0.0.0')).toBeTruthy();
   } finally { await upstream.stop(); }
 });

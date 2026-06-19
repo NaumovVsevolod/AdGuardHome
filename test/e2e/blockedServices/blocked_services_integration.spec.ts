@@ -1,5 +1,4 @@
-import assert from 'node:assert/strict';
-import { test } from '../runtime/fixtures';
+import { test, expect } from '../runtime/fixtures';
 import { authed } from '../shared/api/test-fetch.ts';
 
 import { waitForAnswers } from '../shared/dns/dns-test-helpers.ts';
@@ -21,7 +20,7 @@ async function setGlobalBlockedServices(agh: AdGuardContainer, api: AdGuardApiCl
   const res = await authed(api)(`${agh.baseUrl}/control/blocked_services/update`, {
     method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids }),
   });
-  assert.ok(res.ok, `Failed to update blocked services: ${res.status}`);
+  expect(res.ok, `Failed to update blocked services: ${res.status}`).toBeTruthy();
 }
 
 const waitForDnsAnswer = (agh: AdGuardContainer, domain: string, predicate: (answers: string[]) => boolean) =>
@@ -30,10 +29,10 @@ const waitForDnsAnswer = (agh: AdGuardContainer, domain: string, predicate: (ans
 test('4156 — Blocked services', async ({ agh, api }) => {
   const upstream = await useYoutubeUpstream(agh, api);
   try {
-    assert.ok((await waitForDnsAnswer(agh, YOUTUBE_TEST_DOMAIN, (a) => a.includes(REAL_IP))).includes(REAL_IP));
+    expect((await waitForDnsAnswer(agh, YOUTUBE_TEST_DOMAIN, (a) => a.includes(REAL_IP))).includes(REAL_IP)).toBeTruthy();
     await setGlobalBlockedServices(agh, api, [YOUTUBE_SERVICE_ID]);
-    assert.ok((await waitForDnsAnswer(agh, YOUTUBE_TEST_DOMAIN, (a) => a.includes(BLOCKED_IP))).includes(BLOCKED_IP));
+    expect((await waitForDnsAnswer(agh, YOUTUBE_TEST_DOMAIN, (a) => a.includes(BLOCKED_IP))).includes(BLOCKED_IP)).toBeTruthy();
     await setGlobalBlockedServices(agh, api, []);
-    assert.ok((await waitForDnsAnswer(agh, YOUTUBE_TEST_DOMAIN, (a) => a.includes(REAL_IP))).includes(REAL_IP));
+    expect((await waitForDnsAnswer(agh, YOUTUBE_TEST_DOMAIN, (a) => a.includes(REAL_IP))).includes(REAL_IP)).toBeTruthy();
   } finally { await upstream.stop(); }
 });

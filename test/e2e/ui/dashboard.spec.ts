@@ -1,4 +1,3 @@
-import assert from 'node:assert/strict';
 import { type Page } from '@playwright/test';
 
 import { test, expect } from '../runtime/fixtures';
@@ -34,7 +33,7 @@ function rankedIndex(items: Array<Record<string, number>>, key: string): number 
 async function refreshDashboardStatistics(page: Page): Promise<void> {
   const refreshButtons = dashboardRefreshButtons(page);
   const count = await refreshButtons.count();
-  assert.ok(count >= 5, `Expected at least 5 refresh buttons, got ${count}`);
+  expect(count >= 5, `Expected at least 5 refresh buttons, got ${count}`).toBeTruthy();
   for (let i = 0; i < count; i += 1) {
     await refreshButtons.nth(i).scrollIntoViewIfNeeded();
     await refreshButtons.nth(i).click();
@@ -62,9 +61,9 @@ test('4045 — Disable/Enable protection', async ({ page, agh, api }) => {
   await expect.poll(async () => (await getStatus(api)).protection_enabled).toBe(false);
 
   const answersWhileDisabled = await resolveDnsAnswers(agh, blockedDomain, 'A');
-  assert.ok(answersWhileDisabled.length > 0 && !answersWhileDisabled.includes('0.0.0.0'),
-    `Expected ${blockedDomain} to resolve while protection disabled, got ${JSON.stringify(answersWhileDisabled)}`);
-  assert.notEqual(findNewestAnswerValue((await getQueryLog(api, { search: blockedDomain, limit: 20 })).data, disableStartedAt), '0.0.0.0');
+  expect(answersWhileDisabled.length > 0 && !answersWhileDisabled.includes('0.0.0.0'),
+    `Expected ${blockedDomain} to resolve while protection disabled, got ${JSON.stringify(answersWhileDisabled)}`).toBeTruthy();
+  expect(findNewestAnswerValue((await getQueryLog(api, { search: blockedDomain, limit: 20 })).data, disableStartedAt)).not.toBe('0.0.0.0');
 
   const enableStartedAt = Date.now();
   await page.getByRole('button', { name: /enable protection/i }).click();
@@ -72,9 +71,9 @@ test('4045 — Disable/Enable protection', async ({ page, agh, api }) => {
   await expect.poll(async () => (await getStatus(api)).protection_enabled).toBe(true);
 
   const answersWhileEnabled = await resolveDnsAnswers(agh, blockedDomain, 'A');
-  assert.ok(answersWhileEnabled.includes('0.0.0.0'),
-    `Expected ${blockedDomain} blocked after protection enabled, got ${JSON.stringify(answersWhileEnabled)}`);
-  assert.equal(findNewestAnswerValue((await getQueryLog(api, { search: blockedDomain, limit: 20 })).data, enableStartedAt), '0.0.0.0');
+  expect(answersWhileEnabled.includes('0.0.0.0'),
+    `Expected ${blockedDomain} blocked after protection enabled, got ${JSON.stringify(answersWhileEnabled)}`).toBeTruthy();
+  expect(findNewestAnswerValue((await getQueryLog(api, { search: blockedDomain, limit: 20 })).data, enableStartedAt)).toBe('0.0.0.0');
 });
 
 test('4046 — Disable protection for interval', async ({ page, api }) => {

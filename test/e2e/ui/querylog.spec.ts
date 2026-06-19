@@ -1,5 +1,3 @@
-import assert from 'node:assert/strict';
-
 import { type Locator, type Page } from '@playwright/test';
 import { test, expect } from '../runtime/fixtures';
 import { resolveAnswers as resolveDnsAnswers } from '../shared/dns/dns-test-helpers.ts';
@@ -78,7 +76,7 @@ async function readTooltipText(page: Page, trigger: Locator, expectedPattern?: R
     const tooltip = page.locator(`.tooltip-custom__container#${tooltipId}, #${tooltipId}.tooltip-custom__container`).first();
     await tooltip.waitFor({ state: 'visible' });
     const text = ((await tooltip.textContent()) ?? '').trim();
-    if (expectedPattern) assert.match(text, expectedPattern);
+    if (expectedPattern) expect(text).toMatch(expectedPattern);
     return text;
   }
   const matcher = expectedPattern ? new RegExp(expectedPattern.source, expectedPattern.flags.replace(/g/g, '')) : null;
@@ -136,7 +134,7 @@ test('4184 — Query log pagination', async ({ page, agh, api }) => {
   await seedQueries(agh, [{ domain: newerDomain, count: 30 }]);
 
   const firstPage = await getQueryLog(api, { limit: 20 });
-  assert.ok(firstPage.oldest, 'Expected first query-log page to expose an oldest cursor');
+  expect(firstPage.oldest, 'Expected first query-log page to expose an oldest cursor').toBeTruthy();
 
   await openQueryLog(page);
   await expect(page.locator('body')).toContainText(newerDomain);
@@ -146,12 +144,12 @@ test('4184 — Query log pagination', async ({ page, agh, api }) => {
   const paginationResponse = waitForPaginationResponse(page, (url) => url.searchParams.get('older_than') === firstPage.oldest && url.searchParams.get('search') === '');
   await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
   const nextPage = await paginationResponse;
-  assert.ok(nextPage.data?.some((r) => r.question?.name?.includes(olderDomain)), `Expected paginated response to contain older records for ${olderDomain}`);
+  expect(nextPage.data?.some((r) => r.question?.name?.includes(olderDomain)), `Expected paginated response to contain older records for ${olderDomain}`).toBeTruthy();
 
   await expect.poll(async () => visibleDomainCount(page, olderDomain)).toBeGreaterThan(0);
   const afterScrollText = await page.locator('body').innerText();
   const afterScrollCount = countOccurrences(afterScrollText, newerDomain) + countOccurrences(afterScrollText, olderDomain);
-  assert.ok(afterScrollCount > beforeScrollCount, `Expected more rows after pagination, before=${beforeScrollCount}, after=${afterScrollCount}`);
+  expect(afterScrollCount > beforeScrollCount, `Expected more rows after pagination, before=${beforeScrollCount}, after=${afterScrollCount}`).toBeTruthy();
 });
 
 test('4185 — Query log pagination with filter', async ({ page, agh, api }) => {
@@ -169,18 +167,18 @@ test('4185 — Query log pagination with filter', async ({ page, agh, api }) => 
   await waitForQueryLogView(page, (text) => text.includes(filteredDomain) && !text.includes(ignoredDomain));
 
   const firstFilteredPage = await getQueryLog(api, { search: filteredDomain, limit: 20 });
-  assert.ok(firstFilteredPage.oldest, 'Expected filtered page to expose an oldest cursor');
+  expect(firstFilteredPage.oldest, 'Expected filtered page to expose an oldest cursor').toBeTruthy();
 
   const beforeScrollCount = countOccurrences(await page.locator('body').innerText(), filteredDomain);
   const paginationResponse = waitForPaginationResponse(page, (url) => url.searchParams.get('older_than') === firstFilteredPage.oldest && url.searchParams.get('search') === filteredDomain);
   await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
   const nextFilteredPage = await paginationResponse;
-  assert.ok(nextFilteredPage.data?.length, 'Expected filtered pagination to return a non-empty older page');
+  expect(nextFilteredPage.data?.length, 'Expected filtered pagination to return a non-empty older page').toBeTruthy();
 
   await expect.poll(async () => visibleDomainCount(page, filteredDomain)).toBeGreaterThan(beforeScrollCount);
   const afterScrollText = await page.locator('body').innerText();
-  assert.ok(countOccurrences(afterScrollText, filteredDomain) > beforeScrollCount, 'Expected more filtered rows after pagination');
-  assert.equal(afterScrollText.includes(ignoredDomain), false);
+  expect(countOccurrences(afterScrollText, filteredDomain) > beforeScrollCount, 'Expected more filtered rows after pagination').toBeTruthy();
+  expect(afterScrollText.includes(ignoredDomain)).toBe(false);
 });
 
 test('4189 — Query log response filter', async ({ page, agh, api }) => {
@@ -246,9 +244,9 @@ test('4194 — Query log response details', async ({ page, agh, api }) => {
   await openQueryLog(page);
   let row = queryLogRow(page, processedDomain);
   let tip = await readTooltipText(page, row.locator('.logs__cell--response .tooltip-custom__trigger').first());
-  assert.match(tip, /Response details/i);
-  assert.match(tip, /Status\s*Processed/i);
-  assert.match(tip, /Response code\s*NOERROR/i);
+  expect(tip).toMatch(/Response details/i);
+  expect(tip).toMatch(/Status\s*Processed/i);
+  expect(tip).toMatch(/Response code\s*NOERROR/i);
 
   await setCustomRules(api, [`||${blockedDomain}^`]);
   await clearQueryLog(api);
@@ -258,10 +256,10 @@ test('4194 — Query log response details', async ({ page, agh, api }) => {
   await expect(page.locator('body')).toContainText(blockedDomain);
   row = queryLogRow(page, blockedDomain);
   tip = await readTooltipText(page, row.locator('.logs__cell--response .tooltip-custom__trigger').first());
-  assert.match(tip, /Response details/i);
-  assert.match(tip, /Status\s*Blocked/i);
-  assert.match(tip, /Rule\(s\)/i);
-  assert.match(tip, /Response\s*A:\s*0\.0\.0\.0/i);
+  expect(tip).toMatch(/Response details/i);
+  expect(tip).toMatch(/Status\s*Blocked/i);
+  expect(tip).toMatch(/Rule\(s\)/i);
+  expect(tip).toMatch(/Response\s*A:\s*0\.0\.0\.0/i);
 });
 
 test('4144 — Add persistent client from query log', async ({ page, agh, api }) => {
@@ -318,8 +316,8 @@ test('4186 — Block query from query log', async ({ page, agh, api }) => {
 
   await openCustomRules(page);
   const rulesValue = await customRulesTextarea(page).inputValue();
-  assert.match(rulesValue, new RegExp(escapeRegExp(clientOnlyBlockDomain)));
-  assert.match(rulesValue, new RegExp(escapeRegExp(currentClientIp)));
+  expect(rulesValue).toMatch(new RegExp(escapeRegExp(clientOnlyBlockDomain)));
+  expect(rulesValue).toMatch(new RegExp(escapeRegExp(currentClientIp)));
   await expectDomainBlocked(agh, clientOnlyBlockDomain);
 });
 
