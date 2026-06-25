@@ -13,8 +13,6 @@ export default defineConfig({
   reporter: [
     ['./runtime/reporter.ts'],
     ['list'],
-    ['html', { open: 'never' }],
-    ['junit', { outputFile: 'test-results/junit.xml' }],
   ],
   use: { trace: 'on-first-retry' },
   projects: [

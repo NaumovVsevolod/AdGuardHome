@@ -32,6 +32,9 @@
 /querylog.json*
 /snapcraft_login
 /test-reports/
+/test/e2e/AdGuardHome_linux_amd64.tar.gz
+/test/e2e/playwright-report/
+/test/e2e/test-results/
 AdGuardHome
 AdGuardHome.exe
 AdGuardHome.yaml*
@@ -40,3 +43,5 @@ node_modules/
 tmp/
 
 !/build/gitkeep
+# Committed image fixture, otherwise caught by the AdGuardHome.yaml* rule above.
+!/test/e2e/runtime/image/pristine/AdGuardHome.yaml
